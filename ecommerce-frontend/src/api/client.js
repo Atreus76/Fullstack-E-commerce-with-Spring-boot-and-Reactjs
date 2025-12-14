@@ -9,7 +9,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = storage.getToken();
   if (token) {
-    config.headers.Authorization = `Bearer  ${token}`;
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -52,6 +52,7 @@ api.interceptors.response.use(
         const res = await axios.post('http://localhost:8080/api/auth/refresh-token', {
           refreshToken,
         });
+        console.log('Login response:', res.data);
 
         const { accessToken } = res.data;
         storage.setToken(accessToken);

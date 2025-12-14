@@ -10,34 +10,33 @@ import Checkout from '../customer/components/Checkout/Checkout'
 import Order from '../customer/components/Order/Order'
 import OrderDetails from '../customer/components/Order/OrderDetails'
 import TestApi from '../pages/TestApi'
+import Login from '../pages/Login'
+import Register from '../pages/Register'
+import MainLayout from '../layout/MainLayout'
+import AuthLayout from '../layout/AuthLayout'
 
 const CustomerRouters = () => {
   return (
     <div>
-        <div>
-        <Navigation />
-        </div>
-        <Routes>
-            {/* <Route path='/' element={<HomePage />}/>
-            <Route path='/cart' element={<Cart />}/>
-            <Route path='/:levelOne/:levelTwo/:levelThree' element={<Product />}/>
-            <Route path='/product/:productId' element={<ProductDetails />}/>
-            <Route path='/checkout' element={<Checkout />}/>
-            <Route path='/account/order' element={<Order />}/>
-            <Route path='/account/order/:orderId' element={<OrderDetails />}/> */}
-            <Route path='/test' element={<TestApi />}/>
+          <Routes>
+        {/* All pages WITH Navigation */}
+        <Route element={<MainLayout />}>
+          <Route path='/' element={<HomePage />} />
+          <Route path='/cart' element={<Cart />} />
+          <Route path='/:levelOne/:levelTwo/:levelThree' element={<Product />} />
+          <Route path='/product/:productId' element={<ProductDetails />} />
+          <Route path='/checkout' element={<Checkout />} />
+          <Route path='/account/order' element={<Order />} />
+          <Route path='/account/order/:orderId' element={<OrderDetails />} />
+        </Route>
 
-
-
-
-        {/* <Product /> */}
-        {/* <ProductDetails /> */}
-        {/* <Cart /> */}
-        {/* <Checkout /> */}
-        {/* <Order /> */}
-        {/* <OrderDetails /> */}
-        </Routes>
-           <div>
+        {/* Auth pages WITHOUT Navigation */}
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Route>
+      </Routes>
+    <div>
         <Footer />
       </div>
     </div>

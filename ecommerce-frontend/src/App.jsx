@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Navigation from './customer/components/navigation/Navigation'
 import HomePage from './customer/pages/HomePage/HomePage'
 import Footer from './customer/components/Footer/Footer'
@@ -10,12 +10,24 @@ import Order from './customer/components/Order/Order'
 import OrderDetails from './customer/components/Order/OrderDetails'
 import { Route, Routes } from 'react-router-dom'
 import CustomerRouters from './Routers/CustomerRouters'
+import { Toaster } from 'react-hot-toast';
+import useAuthStore from './store/authStore'
 
 function App() {
   const [count, setCount] = useState(0)
+  useEffect(() => {
+    useAuthStore.getState().init();
+  }, []);
 
   return (
     <>
+    <Toaster
+      position="top-center"
+      toastOptions={{
+        duration: 4000,
+        style: { background: '#333', color: '#fff' },
+      }}
+    />
     <Routes>
       <Route path='/*' element={<CustomerRouters />}/>
     </Routes>
