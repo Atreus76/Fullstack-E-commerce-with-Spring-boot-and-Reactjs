@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import {jwtDecode} from 'jwt-decode'; // ← We'll install this in a second
+import useCartStore from './cartStore';
 
 const useAuthStore = create((set) => ({
   user: null,
@@ -91,10 +92,11 @@ const useAuthStore = create((set) => ({
   },
 
   // Optional: Load user on app start (if token exists)
-  init: () => {
+  init: async () => {
     const token = localStorage.getItem('accessToken');
     if (token) {
       useAuthStore.getState().setUserFromToken(token);
+      await useCartStore.getState().fetchCart();
     }
   },
 }));

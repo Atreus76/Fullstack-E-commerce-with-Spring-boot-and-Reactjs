@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom"
 import Navigation from "../customer/components/navigation/Navigation"
-
+import { useEffect } from "react"
+import useCartStore from "../store/cartStore"
 const MainLayout = () => {
   return (
     <div className="min-h-screen bg-gray-50">

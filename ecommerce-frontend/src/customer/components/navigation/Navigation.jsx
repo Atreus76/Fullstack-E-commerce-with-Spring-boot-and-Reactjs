@@ -1,5 +1,3 @@
-"use client";
-
 import { Fragment, use, useState } from "react";
 import {
   Dialog,
@@ -22,14 +20,18 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Link, useNavigate } from "react-router-dom";
-import { navigation } from "./navigation.js";
+import navigation from "./navigationData.js";
 import useAuthStore from "../../../store/authStore.js";
+import useCartStore from '../../../store/cartStore.js';
+import CartDrawer from "../Cart/CartDrawer.jsx";
 
 export default function Navigation() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-
+  const cartItems = useCartStore((state) => state.totalItems);
+  const [cartOpen, setCartOpen] = useState(false);
+  const totalItems = useCartStore((state) => state.totalItems);
   const handleCategoryClick = (category, section, item, close) => {
     navigate(`/${category.id}/${section.id}/${item.name}`);
     close();
@@ -384,8 +386,8 @@ export default function Navigation() {
                 </div>
 
                 {/* Cart */}
-                <Link
-                  to="/cart"
+                <button
+                  onClick={() => setCartOpen(true)}
                   className="relative p-2 text-gray-400 hover:text-gray-500"
                 >
                   <ShoppingBagIcon className="size-6" />
@@ -394,12 +396,18 @@ export default function Navigation() {
                       {cartItems}
                     </span>
                   )} */}
-                </Link>
+                  {totalItems > 0 && (
+    <span className="absolute -top-1 -right-1 ...">
+      {totalItems}
+    </span>
+  )}
+                </button>
               </div>
             </div>
           </div>
         </nav>
       </header>
+      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
     </div>
   );
 }

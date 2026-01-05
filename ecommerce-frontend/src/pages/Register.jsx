@@ -15,6 +15,7 @@ export default function Register() {
     setLoading(true);
     try {
       await register(name, email, password);
+      await useCartStore.getState().fetchCart();
       navigate('/');
     } catch (err) {
       // toast already shown

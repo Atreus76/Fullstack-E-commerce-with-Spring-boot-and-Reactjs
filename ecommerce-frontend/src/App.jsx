@@ -12,6 +12,7 @@ import { Route, Routes } from 'react-router-dom'
 import CustomerRouters from './Routers/CustomerRouters'
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './store/authStore'
+import useCartStore from './store/cartStore'
 
 function App() {
   const [count, setCount] = useState(0)
