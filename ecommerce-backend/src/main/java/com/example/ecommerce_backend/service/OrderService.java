@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -55,6 +56,7 @@ public class OrderService {
         Order order = Order.builder()
                 .user(cart.getUser())
                 .stripePaymentIntentId(paymentIntent.getId())
+                .createdAt(LocalDateTime.now())
                 .totalAmount(cartService.toResponse(cart).getTotal())
                 .status(OrderStatus.PENDING)
                 .build();

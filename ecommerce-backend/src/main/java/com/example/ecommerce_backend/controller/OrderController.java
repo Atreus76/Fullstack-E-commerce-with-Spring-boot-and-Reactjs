@@ -61,6 +61,19 @@ public class OrderController {
                 .toList();
     }
 
+    @GetMapping("/my/{orderId}")
+    public OrderResponse getMyOrdersById(@PathVariable Long orderId, Authentication auth){
+        User user = userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        if (!order.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("You can only view your own orders");
+        }
+        return toFullResponse(order, null);
+
+    }
+
     // 3. ADMIN: All orders
     @GetMapping("/all")
     @PreAuthorize("hasAuthority('ADMIN')")

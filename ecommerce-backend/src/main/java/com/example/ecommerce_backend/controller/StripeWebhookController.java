@@ -1,6 +1,10 @@
 package com.example.ecommerce_backend.controller;
 
+import com.example.ecommerce_backend.model.Order;
+import com.example.ecommerce_backend.repository.OrderRepository;
+import com.example.ecommerce_backend.service.CartService;
 import com.example.ecommerce_backend.service.OrderService;
+import com.example.ecommerce_backend.status.OrderStatus;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import com.stripe.net.Webhook;
@@ -14,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class StripeWebhookController {
     private final OrderService orderService;
+    private final OrderRepository orderRepository;
+    private final CartService cartService;
     @Value("${stripe.webhook-secret}") private String webhookSecret;
 
     @PostMapping("/stripe")
@@ -26,7 +32,17 @@ public class StripeWebhookController {
 
         if ("payment_intent.succeeded".equals(event.getType())) {
             PaymentIntent intent = (PaymentIntent) event.getDataObjectDeserializer().getObject().get();
-            orderService.fulfillOrder(intent.getId());
+            // Find the order by stripePaymentIntentId
+            Order order = orderRepository.findByStripePaymentIntentId(intent.getId())
+                    .orElseThrow();
+
+            // Update order status
+            order.setStatus(OrderStatus.PAID);
+            orderRepository.save(order);
+
+            // Clear the user's cart after successful payment
+            String userEmail = order.getUser().getEmail(); // or however you get the user
+            cartService.clearCart(userEmail); // implement this method
         }
 
         return ResponseEntity.ok().build();

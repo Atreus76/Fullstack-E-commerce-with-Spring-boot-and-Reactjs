@@ -3,6 +3,7 @@ package com.example.ecommerce_backend.model;
 import com.example.ecommerce_backend.status.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -29,8 +30,9 @@ public class Order {
     private OrderStatus status = OrderStatus.PENDING;
 
     private BigDecimal totalAmount;
-
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @CreationTimestamp
+    @Column(name="created_at", updatable = false)
+    private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
