@@ -13,6 +13,7 @@ import CustomerRouters from './Routers/CustomerRouters'
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './store/authStore'
 import useCartStore from './store/cartStore'
+import AdminLayout from './layout/AdminLayout'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -31,6 +32,7 @@ function App() {
     />
     <Routes>
       <Route path='/*' element={<CustomerRouters />}/>
+      <Route path='/admin/*' element={<AdminLayout />}/>
     </Routes>
       
       <div>
