@@ -8,15 +8,22 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((s) => s.login);
+  const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(email, password);
+      const loggedInUser = await login(email, password);
       await useCartStore.getState().fetchCart();
-      navigate('/');
+      if (loggedInUser?.role === 'ADMIN') {
+        console.log('User Role:', loggedInUser.role);
+        navigate('/admin');
+        return;
+      }else {
+        navigate('/');
+      }
     } catch (err) {
       // toast already shown in store
     } finally {

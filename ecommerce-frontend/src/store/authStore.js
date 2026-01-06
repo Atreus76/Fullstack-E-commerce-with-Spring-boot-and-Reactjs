@@ -29,10 +29,13 @@ const useAuthStore = create((set) => ({
 
       const user = { email, role };
       localStorage.setItem('role', role === 'ADMIN' ? 'ADMIN' : 'USER');
+      console.log('Decoded user from token:', user);
 
       set({ user, isAdmin: role === 'ADMIN' });
+      return user;
     } catch (err) {
       console.error('Failed to decode token', err);
+      return null;
     }
   },
 
@@ -46,9 +49,13 @@ const useAuthStore = create((set) => ({
       localStorage.setItem('refreshToken', refreshToken);
 
       // Decode user from token
-      useAuthStore.getState().setUserFromToken(accessToken);
-
-      toast.success('Welcome back!');
+      const user = useAuthStore.getState().setUserFromToken(accessToken);
+      if (user){
+        toast.success('Welcome back!');
+        return user;
+      }else {
+        throw new Error('Failed to decode user from token');
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed');
       throw err;
