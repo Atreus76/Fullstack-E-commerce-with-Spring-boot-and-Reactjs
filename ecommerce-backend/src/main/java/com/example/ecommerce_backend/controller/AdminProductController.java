@@ -1,6 +1,7 @@
 package com.example.ecommerce_backend.controller;
 
 import com.example.ecommerce_backend.DTO.CreateProductRequest;
+import com.example.ecommerce_backend.DTO.ProductResponse;
 import com.example.ecommerce_backend.DTO.UpdateProductRequest;
 import com.example.ecommerce_backend.service.ProductService;
 import jakarta.validation.Valid;
@@ -11,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/products")
@@ -18,6 +20,13 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class AdminProductController {
     private final ProductService productService;
+
+
+    @GetMapping
+    public List<ProductResponse> list() {
+        return productService.getAllActive();
+    }
+
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> create(@Valid CreateProductRequest req) throws IOException {

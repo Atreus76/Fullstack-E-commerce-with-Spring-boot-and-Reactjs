@@ -1,7 +1,7 @@
 // src/pages/admin/ProductModal.jsx
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import api from '../../api/client';
+import api from '../api/client';
 
 export default function ProductModal({ product, onClose, onSuccess }) {
   const [formData, setFormData] = useState({

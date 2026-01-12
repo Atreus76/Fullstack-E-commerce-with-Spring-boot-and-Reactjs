@@ -1,6 +1,6 @@
 // src/pages/admin/Dashboard.jsx
 import { useQuery } from '@tanstack/react-query';
-import api from '../../api/client';
+import api from '../api/client';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,

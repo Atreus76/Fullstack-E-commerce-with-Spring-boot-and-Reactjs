@@ -14,6 +14,10 @@ import { Toaster } from 'react-hot-toast';
 import useAuthStore from './store/authStore'
 import useCartStore from './store/cartStore'
 import AdminLayout from './layout/AdminLayout'
+import AdminRouters from './Routers/AdminRouters'
+import AdminDashboard from './admin/Dashboard'
+import AdminProducts from './admin/Products'
+import AdminCategories from './admin/Categories'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -32,7 +36,11 @@ function App() {
     />
     <Routes>
       <Route path='/*' element={<CustomerRouters />}/>
-      <Route path='/admin/*' element={<AdminLayout />}/>
+      <Route path='/admin' element={<AdminLayout />}>
+        <Route path='/admin/dashboard' element={<AdminDashboard />} />
+        <Route path='/admin/products' element={<AdminProducts />} />
+        <Route path='/admin/categories' element={<AdminCategories />} />
+      </Route>
     </Routes>
       
       <div>
