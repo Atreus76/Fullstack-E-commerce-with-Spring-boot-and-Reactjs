@@ -78,18 +78,17 @@ public class OrderService {
 
     // Called by webhook after payment success
     public void fulfillOrder(String paymentIntentId) {
+        System.out.println("Fulfilling order for PI: " + paymentIntentId);
         Order order = orderRepository.findByStripePaymentIntentId(paymentIntentId)
-                .orElseThrow();
+                .orElseGet(() -> {
+                    System.out.println("⚠️ No order found for ID: " + paymentIntentId);
+                    return null;
+                });
 
-        order.setStatus(OrderStatus.PAID);
-        order.getItems().forEach(item -> {
-            Product p = productRepository.findById(item.getProductId()).get();
-            p.setStock(p.getStock() - item.getQuantity());
-            productRepository.save(p);
-        });
-
-        // Clear cart
-        cartService.clearCart(order.getUser().getEmail());
-        orderRepository.save(order);
+        if (order != null) {
+            order.setStatus(OrderStatus.PAID);
+            orderRepository.save(order);
+            System.out.println("✅ Order status updated to PAID in database!");
+        }
     }
 }

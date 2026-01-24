@@ -96,7 +96,7 @@
         <dependency>
             <groupId>com.stripe</groupId>
             <artifactId>stripe-java</artifactId>
-            <version>26.4.0</version>
+            <version>28.0.0</version>
         </dependency>
 	</dependencies>
 

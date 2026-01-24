@@ -1,5 +1,5 @@
 // src/pages/Checkout.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../api/client';
 import useCartStore from '../../../store/cartStore';
@@ -14,14 +14,20 @@ export default function Checkout() {
   const { items, totalPrice, clearCart } = useCartStore();
 
   const [clientSecret, setClientSecret] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const initialized = useRef(false);
 
   // Create order and get clientSecret
   useEffect(() => {
+    if (initialized.current) return;
+
     if (items.length === 0) {
       navigate('/cart');
       return;
     }
+
+    initialized.current = true;
 
     api.post('/orders/create-from-cart')
       .then((res) => {
@@ -30,10 +36,11 @@ export default function Checkout() {
         setLoading(false);
       })
       .catch((err) => {
+        initialized.current = false;
         toast.error('Failed to initialize payment');
         navigate('/cart');
       });
-  }, [items, navigate]);
+  }, [items.length, navigate]);
 
   if (loading) {
   return (

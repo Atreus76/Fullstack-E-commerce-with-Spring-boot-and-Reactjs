@@ -42,6 +42,7 @@ public class SecurityConfig {
                                                 "img-src 'self' https://*.stripe.com data:;"
                                 )))
                 .csrf(csrf -> csrf.disable())
+//                        ignoringRequestMatchers("/stripe"))
                 .cors(cors -> cors.configure(http))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth

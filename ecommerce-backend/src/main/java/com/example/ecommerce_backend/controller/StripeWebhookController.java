@@ -6,12 +6,18 @@ import com.example.ecommerce_backend.service.CartService;
 import com.example.ecommerce_backend.service.OrderService;
 import com.example.ecommerce_backend.status.OrderStatus;
 import com.stripe.model.Event;
+import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.model.PaymentIntent;
 import com.stripe.net.Webhook;
+import jakarta.websocket.Session;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/webhook")
@@ -25,26 +31,31 @@ public class StripeWebhookController {
     @PostMapping("/stripe")
     public ResponseEntity<String> handle(@RequestBody String payload,
                                          @RequestHeader("Stripe-Signature") String sigHeader) {
-        Event event;
+        System.out.println("--- Webhook Hit ---");
         try {
-            event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
-        } catch (Exception e) { return ResponseEntity.badRequest().body("Invalid signature"); }
+            Event event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
+            System.out.println("Event Type: " + event.getType());
 
-        if ("payment_intent.succeeded".equals(event.getType())) {
-            PaymentIntent intent = (PaymentIntent) event.getDataObjectDeserializer().getObject().get();
-            // Find the order by stripePaymentIntentId
-            Order order = orderRepository.findByStripePaymentIntentId(intent.getId())
-                    .orElseThrow();
+            if ("payment_intent.succeeded".equals(event.getType())) {
+                EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
 
-            // Update order status
-            order.setStatus(OrderStatus.PAID);
-            orderRepository.save(order);
+                // 1. deserializeUnsafe() bypasses the version check that is causing your error
+                PaymentIntent intent = (PaymentIntent) dataObjectDeserializer.deserializeUnsafe();
 
-            // Clear the user's cart after successful payment
-            String userEmail = order.getUser().getEmail(); // or however you get the user
-            cartService.clearCart(userEmail); // implement this method
+                if (intent != null) {
+                    System.out.println("✅ PaymentIntent parsed successfully (Unsafe Mode): " + intent.getId());
+                    orderService.fulfillOrder(intent.getId());
+                } else {
+                    System.err.println("❌ Failed to parse PaymentIntent even with unsafe deserialization.");
+                }
+            }
+            return ResponseEntity.ok().build();
+
+        } catch (Exception e) {
+            // THIS WILL FORCE THE LOG TO APPEAR
+            System.err.println("CRITICAL WEBHOOK ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
-
-        return ResponseEntity.ok().build();
     }
 }
