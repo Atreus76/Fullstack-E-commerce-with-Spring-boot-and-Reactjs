@@ -71,6 +71,13 @@ const useCartStore = create((set, get) => ({
       toast.error('Clear failed');
     }
   },
+  
+  getTotalItems: () => {
+    const items = get().items || [];
+    return items.reduce((sum, item) => sum + item.quantity, 0);
+  },
+
+
 }));
 
 export default useCartStore;

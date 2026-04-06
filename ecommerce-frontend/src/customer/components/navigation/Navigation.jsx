@@ -31,13 +31,13 @@ import {
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuthStore();
-  const { cartItems } = useCartStore();   // cartItems là array
+  const { items, getTotalItems } = useCartStore();   // cartItems là array
 
   const [searchTerm, setSearchTerm] = useState('');
   const [userAnchorEl, setUserAnchorEl] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const cartCount = cartItems?.length || 0;
+  const cartCount = getTotalItems ? getTotalItems() : cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   const handleSearch = (e) => {
     if (e.key === 'Enter' && searchTerm.trim()) {
@@ -119,9 +119,24 @@ const Navbar = () => {
           </IconButton>
 
           {/* Cart */}
-          <IconButton onClick={() => navigate('/cart')}>
-            <Badge badgeContent={cartCount} color="error">
-              <ShoppingCart />
+          <IconButton onClick={() => navigate('/cart')}
+            sx={{ position: 'relative' }}
+            color='inherit'          >
+            <Badge 
+              badgeContent={cartCount} 
+              color="error"                    // màu đỏ
+              showZero={false}                 // ẩn khi = 0
+              max={99}                         // giới hạn tối đa 99
+              sx={{
+                '& .MuiBadge-badge': {
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                  minWidth: 18,
+                  height: 18,
+                }
+              }}
+            >
+              <ShoppingCart sx={{ fontSize: 28 }} />
             </Badge>
           </IconButton>
 
