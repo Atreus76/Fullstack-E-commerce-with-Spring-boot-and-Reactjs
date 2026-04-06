@@ -23,12 +23,7 @@ const CustomerRouters = () => {
         {/* All pages WITH Navigation */}
         <Route element={<MainLayout />}>
           <Route path='/' element={<HomePage />} />
-          {/* <Route path='/cart' element={<Cart />} />
-          <Route path='/:levelOne/:levelTwo/:levelThree' element={<Product />} />
-          <Route path='/product/:productId' element={<ProductDetails />} />
-          <Route path='/checkout' element={<Checkout />} />
-          <Route path='/account/order' element={<Order />} />
-          <Route path='/account/order/:orderId' element={<OrderDetails />} /> */}
+          <Route path='/cart' element={<Cart />} />
           <Route path="/products" element={<Product />} />
           <Route path="/product/:slug" element={<ProductDetails />} />
           <Route path="/checkout" element={<Checkout />} />

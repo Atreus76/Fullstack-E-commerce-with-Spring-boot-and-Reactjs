@@ -14,6 +14,8 @@ import { useQuery } from "@tanstack/react-query";
 import useCartStore from "../../../store/cartStore";
 import { useSearchParams } from "react-router-dom";
 import api from '../../../api/client';
+import HeroSection from "../../components/HeroSection/HeroSection";
+import TestimonialsSection from "../../components/Testimonials/TestimonialSection";
 
 const HomePage = () => {
   const addToCart = useCartStore((state) => state.addToCart);
@@ -37,7 +39,7 @@ const HomePage = () => {
   return (
     <Box>
       {/* ==================== HERO SECTION ==================== */}
-      <Box
+      {/* <Box
         sx={{
           height: "90vh",
           backgroundImage:
@@ -65,7 +67,8 @@ const HomePage = () => {
             Shop Now
           </Button>
         </Container>
-      </Box>
+      </Box> */}
+      <HeroSection />
 
       {/* ==================== CATEGORIES ==================== */}
       <Container maxWidth="lg" sx={{ py: 8 }}>
@@ -144,7 +147,7 @@ const HomePage = () => {
                         fullWidth
                         variant="contained"
                         startIcon={<ShoppingCart />}
-                        onClick={() => addToCart(product)}
+                        onClick={() => addToCart(product.id)}
                       >
                         Add to Cart
                       </Button>
@@ -158,6 +161,8 @@ const HomePage = () => {
       </Box>
 
       {/* Thêm các section khác: Best Sellers, Testimonials, Newsletter... */}
+      {/* ==================== TESTIMONIALS ==================== */}
+      <TestimonialsSection />
     </Box>
   );
 };
