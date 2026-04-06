@@ -1,342 +1,132 @@
-import { Fragment, use, useState } from "react";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogPanel,
-  Popover,
-  PopoverButton,
-  PopoverGroup,
-  PopoverPanel,
-  Tab,
-  TabGroup,
-  TabList,
-  TabPanel,
-  TabPanels,
-} from "@headlessui/react";
-import {
-  Bars3Icon,
-  MagnifyingGlassIcon,
-  ShoppingBagIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
-import { Link, useNavigate } from "react-router-dom";
-import navigation from "./navigationData.js";
-import useAuthStore from "../../../store/authStore.js";
-import useCartStore from '../../../store/cartStore.js';
-import CartDrawer from "../Cart/CartDrawer.jsx";
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import useAuthStore from '../../../store/authStore';
+import  useCartStore  from '../../../store/cartStore';
 
-export default function Navigation() {
-  const [open, setOpen] = useState(false);
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Badge,
+  Menu,
+  MenuItem,
+  InputBase,
+  Box,
+  Typography,
+  Button,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+} from '@mui/material';
+
+import {
+  ShoppingCart,
+  AccountCircle,
+  Menu as MenuIcon,
+  Search as SearchIcon,
+  FavoriteBorder,
+} from '@mui/icons-material';
+
+const Navbar = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
-  const cartItems = useCartStore((state) => state.totalItems);
-  const [cartOpen, setCartOpen] = useState(false);
-  const totalItems = useCartStore((state) => state.totalItems);
-  const handleCategoryClick = (category, section, item, close) => {
-    navigate(`/${category.id}/${section.id}/${item.name}`);
-    close();
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const { cartItems } = useCartStore();   // cartItems là array
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [userAnchorEl, setUserAnchorEl] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const cartCount = cartItems?.length || 0;
+
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' && searchTerm.trim()) {
+      navigate(`/shop?search=${encodeURIComponent(searchTerm.trim())}`);
+      setSearchTerm('');
+    }
   };
 
+  const handleUserMenuOpen = (event) => setUserAnchorEl(event.currentTarget);
+  const handleUserMenuClose = () => setUserAnchorEl(null);
+
+  const handleLogout = () => {
+    logout();
+    handleUserMenuClose();
+    navigate('/login');
+  };
+
+  // Mobile menu items
+  const mobileMenuItems = [
+    { text: 'Home', path: '/' },
+    { text: 'Shop', path: '/shop' },
+    { text: 'Categories', path: '/categories' },
+    { text: 'Contact', path: '/contact' },
+  ];
+
   return (
-    <div className="bg-white z-50">
-      {/* Mobile menu */}
-      <Dialog open={open} onClose={setOpen} className="relative z-40 lg:hidden">
-        <DialogBackdrop
-          transition
-          className="fixed inset-0 bg-black/25 transition-opacity duration-300 ease-linear data-closed:opacity-0"
-        />
-        <div className="fixed inset-0 z-40 flex">
-          <DialogPanel
-            transition
-            className="relative flex w-full max-w-xs transform flex-col overflow-y-auto bg-white pb-12 shadow-xl transition duration-300 ease-in-out data-closed:-translate-x-full"
-          >
-            <div className="flex px-4 pt-5 pb-2">
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="relative -m-2 inline-flex items-center justify-center rounded-md p-2 text-gray-400"
-              >
-                <span className="absolute -inset-0.5" />
-                <span className="sr-only">Close menu</span>
-                <XMarkIcon aria-hidden="true" className="size-6" />
-              </button>
-            </div>
-
-            {/* Links */}
-            <TabGroup className="mt-2">
-              <div className="border-b border-gray-200">
-                <TabList className="-mb-px flex space-x-8 px-4">
-                  {navigation.categories.map((category) => (
-                    <Tab
-                      key={category.name}
-                      className="flex-1 border-b-2 border-transparent px-1 py-4 text-base font-medium whitespace-nowrap text-gray-900 data-selected:border-indigo-600 data-selected:text-indigo-600"
-                    >
-                      {category.name}
-                    </Tab>
-                  ))}
-                </TabList>
-              </div>
-              <TabPanels as={Fragment}>
-                {navigation.categories.map((category) => (
-                  <TabPanel
-                    key={category.name}
-                    className="space-y-10 px-4 pt-10 pb-8"
-                  >
-                    <div className="grid grid-cols-2 gap-x-4">
-                      {category.featured.map((item) => (
-                        <div key={item.name} className="group relative text-sm">
-                          <img
-                            alt={item.imageAlt}
-                            src={item.imageSrc}
-                            className="aspect-square w-full rounded-lg bg-gray-100 object-cover group-hover:opacity-75"
-                          />
-                          <a
-                            href={item.href}
-                            className="mt-6 block font-medium text-gray-900"
-                          >
-                            <span
-                              aria-hidden="true"
-                              className="absolute inset-0 z-10"
-                            />
-                            {item.name}
-                          </a>
-                          <p aria-hidden="true" className="mt-1">
-                            Shop now
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                    {category.sections.map((section) => (
-                      <div key={section.name}>
-                        <p
-                          id={`${category.id}-${section.id}-heading-mobile`}
-                          className="font-medium text-gray-900"
-                        >
-                          {section.name}
-                        </p>
-                        <ul
-                          role="list"
-                          aria-labelledby={`${category.id}-${section.id}-heading-mobile`}
-                          className="mt-6 flex flex-col space-y-6"
-                        >
-                          {section.items.map((item) => (
-                            <li key={item.name} className="flow-root">
-                              <a
-                                href={item.href}
-                                className="-m-2 block p-2 text-gray-500"
-                              >
-                                {item.name}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </TabPanel>
-                ))}
-              </TabPanels>
-            </TabGroup>
-
-            <div className="space-y-6 border-t border-gray-200 px-4 py-6">
-              {navigation.pages.map((page) => (
-                <div key={page.name} className="flow-root">
-                  <a
-                    href={page.href}
-                    className="-m-2 block p-2 font-medium text-gray-900"
-                  >
-                    {page.name}
-                  </a>
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-6 border-t border-gray-200 px-4 py-6">
-              <div className="flow-root">
-                <a
-                  href="/login"
-                  className="-m-2 block p-2 font-medium text-gray-900"
-                >
-                  Sign in
-                </a>
-              </div>
-              <div className="flow-root">
-                <a
-                  href="#"
-                  className="-m-2 block p-2 font-medium text-gray-900"
-                >
-                  Create account
-                </a>
-              </div>
-            </div>
-
-            <div className="border-t border-gray-200 px-4 py-6">
-              <a href="#" className="-m-2 flex items-center p-2">
-                <img
-                  alt=""
-                  src="https://tailwindcss.com/plus-assets/img/flags/flag-canada.svg"
-                  className="block h-auto w-5 shrink-0"
-                />
-                <span className="ml-3 block text-base font-medium text-gray-900">
-                  CAD
-                </span>
-                <span className="sr-only">, change currency</span>
-              </a>
-            </div>
-          </DialogPanel>
-        </div>
-      </Dialog>
-
-      <header className="relative bg-white">
-        <p className="flex h-10 items-center justify-center bg-indigo-600 px-4 text-sm font-medium text-white sm:px-6 lg:px-8">
-          Get free delivery on orders over $100
-        </p>
-
-        <nav
-          aria-label="Top"
-          className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+    <AppBar position="sticky" sx={{ bgcolor: 'white', color: 'black', boxShadow: 1 }}>
+      <Toolbar sx={{ maxWidth: '1400px', mx: 'auto', width: '100%', px: { xs: 2, md: 4 } }}>
+        
+        {/* Logo */}
+        <Typography
+          variant="h5"
+          component={Link}
+          to="/"
+          mr={40}
+          sx={{
+            fontWeight: 'bold',
+            color: 'primary.main',
+            textDecoration: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+          }}
         >
-          <div className="border-b border-gray-200">
-            <div className="flex h-16 items-center">
-              <button
-                type="button"
-                onClick={() => setOpen(true)}
-                className="relative rounded-md bg-white p-2 text-gray-400 lg:hidden"
-              >
-                <span className="absolute -inset-0.5" />
-                <span className="sr-only">Open menu</span>
-                <Bars3Icon aria-hidden="true" className="size-6" />
-              </button>
+          ShopVibe
+        </Typography>
 
-              {/* Logo */}
-              <div className="ml-4 flex lg:ml-0">
-                <a href="#">
-                  <span className="sr-only">Your Company</span>
-                  <img
-                    alt=""
-                    src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
-                    className="h-8 w-auto"
-                  />
-                </a>
-              </div>
+        {/* Search Bar - Desktop */}
+        <Box
+          sx={{
+            flexGrow: 1,
+            maxWidth: 520,
+            mx: { xs: 2, md: 6 },
+            display: { xs: 'none', md: 'flex' },
+            bgcolor: '#f5f5f5',
+            borderRadius: '9999px',
+            px: 3,
+            py: 1,
+            alignItems: 'center',
+            border: '1px solid #e0e0e0',
+          }}
+        >
+          <SearchIcon sx={{ color: 'gray', mr: 1 }} />
+          <InputBase
+            placeholder="Tìm kiếm sản phẩm..."
+            fullWidth
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={handleSearch}
+          />
+        </Box>
 
-              {/* Flyout menus */}
-              <PopoverGroup className="hidden lg:ml-8 lg:block lg:self-stretch">
-                <div className="flex h-full space-x-8">
-                  {navigation.categories.map((category) => (
-                    <Popover key={category.name} className="flex">
-                      <div className="relative flex">
-                        <PopoverButton className="group relative flex items-center justify-center text-sm font-medium text-gray-700 transition-colors duration-200 ease-out hover:text-gray-800 data-open:text-indigo-600">
-                          {category.name}
-                          <span
-                            aria-hidden="true"
-                            className="absolute inset-x-0 -bottom-px z-30 h-0.5 transition duration-200 ease-out group-data-open:bg-indigo-600"
-                          />
-                        </PopoverButton>
-                      </div>
-                      <PopoverPanel
-                        transition
-                        className="absolute inset-x-0 top-full z-20 w-full bg-white text-sm text-gray-500 transition data-closed:opacity-0 data-enter:duration-200 data-enter:ease-out data-leave:duration-150 data-leave:ease-in"
-                      >
-                        {/* Presentational element used to render the bottom shadow, if we put the shadow on the actual panel it pokes out the top, so we use this shorter element to hide the top of the shadow */}
-                        <div
-                          aria-hidden="true"
-                          className="absolute inset-0 top-1/2 bg-white shadow-sm"
-                        />
-                        <div className="relative bg-white">
-                          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                            <div className="grid grid-cols-2 gap-x-8 gap-y-10 py-16">
-                              <div className="col-start-2 grid grid-cols-2 gap-x-8">
-                                {category.featured.map((item) => (
-                                  <div
-                                    key={item.name}
-                                    className="group relative text-base sm:text-sm"
-                                  >
-                                    <img
-                                      alt={item.imageAlt}
-                                      src={item.imageSrc}
-                                      className="aspect-square w-full rounded-lg bg-gray-100 object-cover group-hover:opacity-75"
-                                    />
-                                    <a
-                                      href={item.href}
-                                      className="mt-6 block font-medium text-gray-900"
-                                    >
-                                      <span
-                                        aria-hidden="true"
-                                        className="absolute inset-0 z-10"
-                                      />
-                                      {item.name}
-                                    </a>
-                                    <p aria-hidden="true" className="mt-1">
-                                      Shop now
-                                    </p>
-                                  </div>
-                                ))}
-                              </div>
-                              <div className="row-start-1 grid grid-cols-3 gap-x-8 gap-y-10 text-sm">
-                                {category.sections.map((section) => (
-                                  <div key={section.name}>
-                                    <p
-                                      id={`${section.name}-heading`}
-                                      className="font-medium text-gray-900"
-                                    >
-                                      {section.name}
-                                    </p>
-                                    <ul
-                                      role="list"
-                                      aria-labelledby={`${section.name}-heading`}
-                                      className="mt-6 space-y-6 sm:mt-4 sm:space-y-4"
-                                    >
-                                      {section.items.map((item) => (
-                                        <li key={item.name} className="flex">
-                                          <p
-                                            onClick={() => {
-                                              handleCategoryClick(
-                                                category,
-                                                section,
-                                                item,
-                                                close
-                                              );
-                                            }}
-                                            className="hover:text-gray-800"
-                                          >
-                                            {item.name}
-                                          </p>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </PopoverPanel>
-                    </Popover>
-                  ))}
-                  {navigation.pages.map((page) => (
-                    <a
-                      key={page.name}
-                      href={page.href}
-                      className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-800"
-                    >
-                      {page.name}
-                    </a>
-                  ))}
-                </div>
-              </PopoverGroup>
+        {/* Right side icons */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          
+          {/* Wishlist */}
+          <IconButton component={Link} to="/wishlist" sx={{ display: { xs: 'none', sm: 'flex' } }}>
+            <FavoriteBorder />
+          </IconButton>
 
-              {/* Right side: Auth + Cart */}
-              <div className="ml-auto flex items-center gap-x-6">
-                {/* Search */}
-                <Link
-                  to="/search"
-                  className="p-2 text-gray-400 hover:text-gray-500"
-                >
-                  <MagnifyingGlassIcon className="size-6" />
-                </Link>
+          {/* Cart */}
+          <IconButton onClick={() => navigate('/cart')}>
+            <Badge badgeContent={cartCount} color="error">
+              <ShoppingCart />
+            </Badge>
+          </IconButton>
 
-                {/* Auth Section - Updated */}
-                <div className="hidden lg:flex lg:items-center lg:justify-end lg:gap-x-6">
+          {/* User */}
+          <div className="hidden lg:flex lg:items-center lg:justify-end lg:gap-x-6">
                   {user ? (
                     <div className="flex items-center gap-x-4">
                       {/* Avatar + Name */}
@@ -384,30 +174,58 @@ export default function Navigation() {
                     </>
                   )}
                 </div>
+          
 
-                {/* Cart */}
-                <button
-                  onClick={() => setCartOpen(true)}
-                  className="relative p-2 text-gray-400 hover:text-gray-500"
-                >
-                  <ShoppingBagIcon className="size-6" />
-                  {/* {cartItems > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-xs font-medium text-white">
-                      {cartItems}
-                    </span>
-                  )} */}
-                  {totalItems > 0 && (
-    <span className="absolute -top-1 -right-1 ...">
-      {totalItems}
-    </span>
-  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </nav>
-      </header>
-      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
-    </div>
+          {/* Hamburger - Mobile */}
+          <IconButton
+            sx={{ display: { md: 'none' } }}
+            onClick={() => setMobileOpen(true)}
+          >
+            <MenuIcon />
+          </IconButton>
+        </Box>
+      </Toolbar>
+
+      {/* Mobile Search */}
+      <Box sx={{ px: 2, pb: 2, display: { md: 'none' } }}>
+        <Box sx={{ bgcolor: '#f5f5f5', borderRadius: '9999px', px: 3, py: 1, display: 'flex', alignItems: 'center' }}>
+          <SearchIcon sx={{ color: 'gray', mr: 1 }} />
+          <InputBase
+            placeholder="Tìm kiếm sản phẩm..."
+            fullWidth
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={handleSearch}
+          />
+        </Box>
+      </Box>
+
+      {/* Mobile Drawer Menu */}
+      <Drawer anchor="right" open={mobileOpen} onClose={() => setMobileOpen(false)}>
+        <Box sx={{ width: 280, pt: 2 }}>
+          <List>
+            {mobileMenuItems.map((item) => (
+              <ListItem
+                button
+                key={item.text}
+                component={Link}
+                to={item.path}
+                onClick={() => setMobileOpen(false)}
+              >
+                <ListItemText primary={item.text} />
+              </ListItem>
+            ))}
+            {!isAuthenticated && (
+              <ListItem button component={Link} to="/login" onClick={() => setMobileOpen(false)}>
+                <ListItemText primary="Đăng nhập" />
+              </ListItem>
+            )}
+            
+          </List>
+        </Box>
+      </Drawer>
+    </AppBar>
   );
-}
+};
+
+export default Navbar;
