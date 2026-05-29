@@ -2,12 +2,14 @@ package com.example.ecommerce_backend.controller;
 
 import com.example.ecommerce_backend.DTO.OrderItemResponse;
 import com.example.ecommerce_backend.DTO.OrderResponse;
+import com.example.ecommerce_backend.DTO.PaymentResponse;
 import com.example.ecommerce_backend.model.Order;
 import com.example.ecommerce_backend.model.User;
 import com.example.ecommerce_backend.repository.OrderRepository;
 import com.example.ecommerce_backend.repository.ProductRepository;
 import com.example.ecommerce_backend.repository.UserRepository;
 import com.example.ecommerce_backend.service.OrderService;
+import com.example.ecommerce_backend.service.StripeService;
 import com.example.ecommerce_backend.status.OrderStatus;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
@@ -33,6 +35,7 @@ public class OrderController {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final StripeService stripeService;
 
     @Value("${stripe.secret-key}")
     private String stripeSecretKey;
@@ -147,6 +150,25 @@ public class OrderController {
                 productRepository.save(product);
             });
         });
+    }
+
+    @PostMapping("/{orderId}/resume-payment")
+    public ResponseEntity<?> resumePayment(
+            @PathVariable Long orderId,
+            Authentication authentication) throws StripeException {
+
+        String email = authentication.getName(); // or however you get current user
+
+        Order order = orderService.findByIdAndUser(orderId, email);
+
+        if (order == null || !order.getStatus().equals(OrderStatus.PENDING)) {
+            return ResponseEntity.badRequest().body("Order not found or cannot be resumed");
+        }
+
+        // Create or retrieve PaymentIntent (reuse if possible)
+        String clientSecret = stripeService.createPaymentIntentForOrder(order);
+
+        return ResponseEntity.ok(new PaymentResponse(clientSecret));
     }
 
     // Helper: convert Order → response DTO

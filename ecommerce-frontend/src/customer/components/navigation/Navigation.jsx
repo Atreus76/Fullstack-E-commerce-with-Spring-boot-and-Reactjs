@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import useAuthStore from '../../../store/authStore';
 import  useCartStore  from '../../../store/cartStore';
 
@@ -32,17 +32,33 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuthStore();
   const { items, getTotalItems } = useCartStore();   // cartItems là array
+  const [searchParams] = useSearchParams();
+  const debounceTimeout = useRef(null);
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [userAnchorEl, setUserAnchorEl] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const cartCount = getTotalItems ? getTotalItems() : cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  // Debounce search realtime
+  useEffect(() => {
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
 
-  const handleSearch = (e) => {
-    if (e.key === 'Enter' && searchTerm.trim()) {
-      navigate(`/shop?search=${encodeURIComponent(searchTerm.trim())}`);
-      setSearchTerm('');
+    debounceTimeout.current = setTimeout(() => {
+      if (searchTerm.trim()) {
+        navigate(`/shop?search=${encodeURIComponent(searchTerm.trim())}`);
+      }
+    }, 450); // 450ms sau khi ngừng gõ thì search
+
+    return () => clearTimeout(debounceTimeout.current);
+  }, [searchTerm, navigate]);
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+      if (searchTerm.trim()) {
+        navigate(`/shop?search=${encodeURIComponent(searchTerm.trim())}`);
+      }
     }
   };
 
@@ -102,11 +118,12 @@ const Navbar = () => {
         >
           <SearchIcon sx={{ color: 'gray', mr: 1 }} />
           <InputBase
-            placeholder="Tìm kiếm sản phẩm..."
+            placeholder="Search for a product..."
             fullWidth
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={handleSearch}
+            onKeyDown={handleSearchKeyDown}
+            sx={{ ml: 1, flex: 1 }}
           />
         </Box>
 
@@ -206,11 +223,11 @@ const Navbar = () => {
         <Box sx={{ bgcolor: '#f5f5f5', borderRadius: '9999px', px: 3, py: 1, display: 'flex', alignItems: 'center' }}>
           <SearchIcon sx={{ color: 'gray', mr: 1 }} />
           <InputBase
-            placeholder="Tìm kiếm sản phẩm..."
+            placeholder="Search for a product..."
             fullWidth
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={handleSearch}
+            onKeyDown={handleSearchKeyDown}
           />
         </Box>
       </Box>

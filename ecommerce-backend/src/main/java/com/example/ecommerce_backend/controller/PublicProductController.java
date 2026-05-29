@@ -1,12 +1,15 @@
 package com.example.ecommerce_backend.controller;
 
 import com.example.ecommerce_backend.DTO.ProductResponse;
+import com.example.ecommerce_backend.model.Product;
 import com.example.ecommerce_backend.service.ProductService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.hibernate.query.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
+import java.awt.print.Pageable;
 import java.util.List;
 
 @RestController
@@ -26,5 +29,11 @@ public class PublicProductController {
     @GetMapping("/{slug}")
     public ProductResponse get(@PathVariable String slug) {
         return productService.getBySlug(slug);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Product>> searchProducts(@RequestParam String keyword) {
+        List<Product> results = productService.searchProducts(keyword);
+        return ResponseEntity.ok(results);
     }
 }

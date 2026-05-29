@@ -15,6 +15,7 @@ import Register from '../pages/Register'
 import MainLayout from '../layout/MainLayout'
 import AuthLayout from '../layout/AuthLayout'
 import CheckoutSuccess from '../customer/components/Checkout/CheckoutSuccess'
+import Shop from '../customer/pages/Shop'
 
 const CustomerRouters = () => {
   return (
@@ -30,6 +31,7 @@ const CustomerRouters = () => {
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
           <Route path='/account/order' element={<Order />} />
           <Route path='/account/order/:orderId' element={<OrderDetails />} />
+          <Route path='/shop' element={<Shop />} />
         </Route>
 
         {/* Auth pages WITHOUT Navigation */}

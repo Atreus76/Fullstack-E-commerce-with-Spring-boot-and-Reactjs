@@ -14,7 +14,7 @@ const Cart = () => {
   const [loading, setLoading] = useState(false);
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = subtotal > 500000 ? 0 : 30000;
+  const shipping = subtotal > 5000 ? 0 : 300;
   const total = subtotal + shipping;
   // console.log('Cart items:', items);
 

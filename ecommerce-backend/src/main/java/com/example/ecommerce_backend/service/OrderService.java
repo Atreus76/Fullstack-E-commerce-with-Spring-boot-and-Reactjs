@@ -1,11 +1,9 @@
 package com.example.ecommerce_backend.service;
 
-import com.example.ecommerce_backend.model.Cart;
-import com.example.ecommerce_backend.model.Order;
-import com.example.ecommerce_backend.model.OrderItem;
-import com.example.ecommerce_backend.model.Product;
+import com.example.ecommerce_backend.model.*;
 import com.example.ecommerce_backend.repository.OrderRepository;
 import com.example.ecommerce_backend.repository.ProductRepository;
+import com.example.ecommerce_backend.repository.UserRepository;
 import com.example.ecommerce_backend.status.OrderStatus;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
@@ -26,6 +24,7 @@ public class OrderService {
     private final CartService cartService;
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
 
     @Value("${stripe.secret-key}")
     private String stripeKey;
@@ -91,4 +90,14 @@ public class OrderService {
             System.out.println("✅ Order status updated to PAID in database!");
         }
     }
+    public Order findByIdAndUser(Long orderId, String email) {
+        // Look up the user by email
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Find the order by ID and user
+        return orderRepository.findByIdAndUser(orderId, user)
+                .orElse(null);
+    }
+
 }

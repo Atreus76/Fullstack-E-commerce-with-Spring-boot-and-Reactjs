@@ -8,12 +8,13 @@ import {
   Container,
   Grid,
   Typography,
+  Chip,
 } from "@mui/material";
 import { Star, ShoppingCart } from "@mui/icons-material";
 import { useQuery } from "@tanstack/react-query";
 import useCartStore from "../../../store/cartStore";
 import { useSearchParams } from "react-router-dom";
-import api from '../../../api/client';
+import api from "../../../api/client";
 import HeroSection from "../../components/HeroSection/HeroSection";
 import TestimonialsSection from "../../components/Testimonials/TestimonialSection";
 
@@ -113,7 +114,9 @@ const HomePage = () => {
             {isLoading ? (
               <Typography>Loading products...</Typography>
             ) : error ? (
-              <Typography color="error">Failed to load products {error.message}</Typography>
+              <Typography color="error">
+                Failed to load products {error.message}
+              </Typography>
             ) : (
               products.slice(0, 8).map((product) => (
                 <Grid item size={{ xs: 12, sm: 6, md: 3 }} key={product.id}>
@@ -141,6 +144,16 @@ const HomePage = () => {
                       <Typography variant="h6" color="primary" sx={{ mt: 1 }}>
                         ${product.price}
                       </Typography>
+                      <Chip
+                        label={
+                          product.stock > 0
+                            ? `${product.stock} available`
+                            : "Out of stock"
+                        }
+                        color={product.stock > 0 ? "success" : "error"}
+                        size="small"
+                        sx={{ mt: 1 }}
+                      />
                     </CardContent>
                     <Box sx={{ p: 2, pt: 0 }}>
                       <Button
@@ -148,8 +161,9 @@ const HomePage = () => {
                         variant="contained"
                         startIcon={<ShoppingCart />}
                         onClick={() => addToCart(product.id)}
+                        disabled={product.stock <= 0}
                       >
-                        Add to Cart
+                        {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
                       </Button>
                     </Box>
                   </Card>

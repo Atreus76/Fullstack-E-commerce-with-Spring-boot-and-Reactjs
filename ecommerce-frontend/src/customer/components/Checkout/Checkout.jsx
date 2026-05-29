@@ -1,6 +1,6 @@
 // src/pages/Checkout.jsx
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../../api/client';
 import useCartStore from '../../../store/cartStore';
 import toast from 'react-hot-toast';
@@ -15,32 +15,44 @@ export default function Checkout() {
 
   const [clientSecret, setClientSecret] = useState('');
   const [loading, setLoading] = useState(true);
-
+  const {orderId} = useParams();
   const initialized = useRef(false);
 
-  // Create order and get clientSecret
   useEffect(() => {
-    if (initialized.current) return;
+  if (initialized.current) return;
+  initialized.current = true;
 
-    if (items.length === 0) {
-      navigate('/cart');
-      return;
-    }
-
-    initialized.current = true;
-
-    api.post('/orders/create-from-cart')
-      .then((res) => {
-        console.log("REsponse: ", res.data)
+  // Case 1: Checkout from an existing pending order
+  if (orderId) {
+    api.post(`/orders/${orderId}/resume-payment`)
+      .then(res => {
         setClientSecret(res.data.clientSecret);
         setLoading(false);
       })
-      .catch((err) => {
-        initialized.current = false;
-        toast.error('Failed to initialize payment');
-        navigate('/cart');
+      .catch(err => {
+        toast.error('Failed to resume payment');
+        navigate('/orders'); // back to orders list
       });
-  }, [items.length, navigate]);
+    return;
+  }
+
+  // Case 2: Checkout from cart
+  if (items.length === 0) {
+    navigate('/cart');
+    return;
+  }
+
+  api.post('/orders/create-from-cart')
+    .then(res => {
+      setClientSecret(res.data.clientSecret);
+      setLoading(false);
+    })
+    .catch(err => {
+      toast.error('Failed to initialize payment');
+      navigate('/cart');
+    });
+}, [orderId, items.length, navigate]);
+
 
   if (loading) {
   return (

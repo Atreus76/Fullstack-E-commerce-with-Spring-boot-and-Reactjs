@@ -10,4 +10,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     boolean existsBySlug(String slug);
     Optional<Product> findBySlug(String slug);
     List<Product> findByActiveTrue();
+    List<Product> findByNameContainingIgnoreCase(String keyword);
+
 }

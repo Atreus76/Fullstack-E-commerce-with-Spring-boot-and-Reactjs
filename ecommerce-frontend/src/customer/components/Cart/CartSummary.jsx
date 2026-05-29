@@ -5,28 +5,28 @@ const CartSummary = ({ subtotal, shipping, total, onCheckout, loading }) => {
   return (
     <Box>
       <Typography variant="h6" fontWeight="bold" gutterBottom>
-        Tóm tắt đơn hàng
+        Order Summary
       </Typography>
       <Divider sx={{ my: 2 }} />
       
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-        <Typography>Tạm tính</Typography>
-        <Typography>{subtotal.toLocaleString('vi-VN')} ₫</Typography>
+        <Typography>Subtotal</Typography>
+        <Typography>${subtotal}</Typography>
       </Box>
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography>Phí vận chuyển</Typography>
+        <Typography>Shipping</Typography>
         <Typography color={shipping === 0 ? 'success.main' : ''}>
-          {shipping === 0 ? 'Miễn phí' : shipping.toLocaleString('vi-VN') + ' ₫'}
+          {shipping === 0 ? 'Free' : '$'+shipping}
         </Typography>
       </Box>
 
       <Divider sx={{ my: 2 }} />
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
-        <Typography variant="h6" fontWeight="bold">Tổng cộng</Typography>
+        <Typography variant="h6" fontWeight="bold">Total</Typography>
         <Typography variant="h6" fontWeight="bold" color="primary">
-          {total.toLocaleString('vi-VN')} ₫
+          ${total}
         </Typography>
       </Box>
 
@@ -38,7 +38,7 @@ const CartSummary = ({ subtotal, shipping, total, onCheckout, loading }) => {
         disabled={loading}
         sx={{ py: 1.8, borderRadius: 9999, fontSize: '1.1rem' }}
       >
-        {loading ? 'Đang xử lý...' : 'Tiến hành thanh toán'}
+        {loading ? 'Processing...' : 'Proceed to payment'}
       </Button>
     </Box>
   );

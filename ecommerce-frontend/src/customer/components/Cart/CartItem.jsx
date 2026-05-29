@@ -21,7 +21,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
       <Box sx={{ flex: 1 }}>
         <Typography variant="h6" gutterBottom>{item.name}</Typography>
         <Typography color="primary" fontWeight="bold">
-          {item.price.toLocaleString('vi-VN')} ₫
+          ${item.price}
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
@@ -45,7 +45,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
 
       <Box sx={{ textAlign: 'right' }}>
         <Typography variant="h6" fontWeight="bold" color="primary">
-          {(item.price * item.quantity).toLocaleString('vi-VN')} ₫
+          ${(item.price * item.quantity)}
         </Typography>
       </Box>
     </Box>

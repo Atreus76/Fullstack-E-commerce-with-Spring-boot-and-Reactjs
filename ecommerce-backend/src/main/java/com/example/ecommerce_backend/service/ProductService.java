@@ -10,8 +10,10 @@ import com.example.ecommerce_backend.repository.ProductRepository;
 import com.github.slugify.Slugify;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.query.Page;
 import org.springframework.stereotype.Service;
 
+import java.awt.print.Pageable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -110,6 +112,10 @@ public class ProductService {
     public ProductResponse getBySlug(String slug) {
         Product p = productRepository.findBySlug(slug).orElseThrow();
         return toResponse(p);
+    }
+
+    public List<Product> searchProducts(String keyword) {
+        return productRepository.findByNameContainingIgnoreCase(keyword);
     }
 
     private ProductResponse toResponse(Product p) {

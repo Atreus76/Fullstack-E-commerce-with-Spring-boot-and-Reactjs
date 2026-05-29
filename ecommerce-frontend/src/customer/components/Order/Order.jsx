@@ -34,6 +34,10 @@ export default function Order() {
     }
   };
 
+  const handleCheckout = () => {
+    setTimeout(() => navigate('/checkout'), 600);
+  };
+
   // Redirect if not logged in
   if (!user) {
     navigate("/login");
@@ -158,12 +162,20 @@ export default function Order() {
                   </Link>
 
                   {order.status === "PENDING" && (
+                    <>
                     <button
                       onClick={() => cancelOrder(order.id)}
                       className="px-6 py-3 border border-red-600 text-red-600 rounded-lg font-medium hover:bg-red-50"
                     >
                       Cancel Order
                     </button>
+                    <button
+                      onClick={() => handleCheckout()}
+                      className="px-6 py-3 border border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50"
+                    >
+                      Proceed to Payment
+                    </button>
+                    </>
                   )}
                 </div>
               </div>

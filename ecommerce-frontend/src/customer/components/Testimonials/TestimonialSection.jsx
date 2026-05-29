@@ -1,6 +1,6 @@
 import AliceCarousel from 'react-alice-carousel';
 import 'react-alice-carousel/lib/alice-carousel.css';
-import { Box, Container, Typography, Avatar, Rating } from '@mui/material';
+import { Box, Container, Typography, Avatar, Rating, Grid } from '@mui/material';
 import { FormatQuote } from '@mui/icons-material';
 
 // Dữ liệu testimonial (bạn có thể thay bằng dữ liệu thật sau, thậm chí fetch từ API)
@@ -49,11 +49,15 @@ const TestimonialsSection = () => {
         boxShadow: 2,
         p: { xs: 4, md: 6 },
         mx: 2,
+        my: 2,
+        // pb: 6,
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
+        justifyContent: 'space-between',
         textAlign: 'center',
         border: '1px solid #f0f0f0',
+        // flexGrow: 1,
       }}
     >
       <FormatQuote sx={{ fontSize: 60, color: 'primary.main', opacity: 0.2, mb: 2 }} />
@@ -64,14 +68,19 @@ const TestimonialsSection = () => {
           fontSize: '1.1rem',
           fontStyle: 'italic',
           mb: 4,
-          minHeight: 120,
+          height: 120,
           lineHeight: 1.6,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          display: '-webkit-box',
+          WebkitLineClamp: 4,
+          
         }}
       >
         "{testimonial.text}"
       </Typography>
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 'auto' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 'auto'}}>
         <Avatar
           src={testimonial.avatar}
           alt={testimonial.name}
@@ -110,6 +119,7 @@ const TestimonialsSection = () => {
           infinite
           disableButtonsControls={false}
           disableDotsControls={true}
+          margin={4} 
           mouseTracking
           responsive={{
             0: { items: 1 },
