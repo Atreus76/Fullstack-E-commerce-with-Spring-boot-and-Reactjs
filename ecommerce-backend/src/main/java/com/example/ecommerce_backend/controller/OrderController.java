@@ -6,7 +6,6 @@ import com.example.ecommerce_backend.DTO.PaymentResponse;
 import com.example.ecommerce_backend.model.Order;
 import com.example.ecommerce_backend.model.User;
 import com.example.ecommerce_backend.repository.OrderRepository;
-import com.example.ecommerce_backend.repository.ProductRepository;
 import com.example.ecommerce_backend.repository.UserRepository;
 import com.example.ecommerce_backend.service.OrderService;
 import com.example.ecommerce_backend.service.StripeService;
@@ -34,7 +33,6 @@ public class OrderController {
     private final OrderService orderService;
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
-    private final ProductRepository productRepository;
     private final StripeService stripeService;
 
     @Value("${stripe.secret-key}")
@@ -115,8 +113,10 @@ public class OrderController {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ChangeSetPersister.NotFoundException());
 
-        // If already paid → issue refund via Stripe
-        if (order.getStatus() == OrderStatus.PAID) {
+        boolean shouldRefund = order.getStatus() == OrderStatus.PAID;
+
+        // If already paid, issue refund via Stripe
+        if (shouldRefund) {
             try {
                 Stripe.apiKey = stripeSecretKey;
                 PaymentIntent pi = PaymentIntent.retrieve(order.getStripePaymentIntentId());
@@ -133,7 +133,7 @@ public class OrderController {
 
         cancelOrderAndRestoreStock(order);
         return ResponseEntity.ok(
-                order.getStatus() == OrderStatus.PAID
+                shouldRefund
                         ? "Order cancelled and full refund issued"
                         : "Order cancelled successfully"
         );
@@ -141,15 +141,9 @@ public class OrderController {
 
     // Helper: cancel + restore stock
     private void cancelOrderAndRestoreStock(Order order) {
+        orderService.releaseReservedStock(order);
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
-
-        order.getItems().forEach(item -> {
-            productRepository.findById(item.getProductId()).ifPresent(product -> {
-                product.setStock(product.getStock() + item.getQuantity());
-                productRepository.save(product);
-            });
-        });
     }
 
     @PostMapping("/{orderId}/resume-payment")

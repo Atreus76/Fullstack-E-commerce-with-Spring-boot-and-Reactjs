@@ -36,6 +36,8 @@ public class CartService {
     }
 
     public Cart addToCart(String email, Long productId, int quantity) {
+        if (quantity <= 0) throw new RuntimeException("Quantity must be greater than zero");
+
         Cart cart = getCartForUser(email);
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -46,8 +48,18 @@ public class CartService {
                 .filter(item -> item.getProduct().getId().equals(productId))
                 .findFirst()
                 .ifPresentOrElse(
-                        CartItem::increase,
-                        () -> cart.addItem(new CartItem() {{ setProduct(product); setQuantity(quantity); }})
+                        item -> {
+                            int requestedQuantity = item.getQuantity() + quantity;
+                            validateStock(product, requestedQuantity);
+                            item.setQuantity(requestedQuantity);
+                        },
+                        () -> {
+                            validateStock(product, quantity);
+                            CartItem cartItem = new CartItem();
+                            cartItem.setProduct(product);
+                            cartItem.setQuantity(quantity);
+                            cart.addItem(cartItem);
+                        }
                 );
 
         return cartRepository.save(cart);
@@ -63,6 +75,7 @@ public class CartService {
         if (quantity <= 0) {
             cart.removeItem(item);
         } else {
+            validateStock(item.getProduct(), quantity);
             item.setQuantity(quantity);
         }
         return cartRepository.save(cart);
@@ -98,5 +111,12 @@ public class CartService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return new CartResponse(items, total);
+    }
+
+    private void validateStock(Product product, int requestedQuantity) {
+        int availableStock = product.getStock() != null ? product.getStock() : 0;
+        if (requestedQuantity > availableStock) {
+            throw new RuntimeException("Insufficient stock for " + product.getName());
+        }
     }
 }

@@ -8,7 +8,7 @@ const CheckoutForm = () => {
     const stripe = useStripe();
     const elements = useElements();
     const navigate = useNavigate();
-    const { items, totalPrice, clearCart } = useCartStore();
+    const { totalPrice } = useCartStore();
 
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
@@ -30,7 +30,6 @@ const CheckoutForm = () => {
       setMessage(error.message || 'Payment failed');
       toast.error(error.message || 'Payment failed');
     } else {
-      await clearCart();
       toast.success('Payment successful!');
       // If redirect not used, handle success here
       navigate('/checkout/success');

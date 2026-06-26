@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class RegisterRequest{
+    public RegisterRequest() {
+    }
+
     @NotBlank(message = "Name is required")
     private String name;
     @Email(message = "Invalid email")

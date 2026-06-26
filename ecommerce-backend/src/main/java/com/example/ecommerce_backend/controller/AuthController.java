@@ -20,7 +20,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -54,7 +53,17 @@ public class AuthController {
                 .build();
 
         userRepository.save(user);
-        return ResponseEntity.ok("User registered successfully");
+
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                .username(user.getEmail())
+                .password(user.getPassword())
+                .authorities("ROLE_" + user.getRole().name())
+                .build();
+
+        String accessToken = jwtUtils.generateAccessToken(userDetails);
+        RefreshToken refreshTokenEntity = refreshTokenService.createRefreshToken(user.getEmail());
+
+        return ResponseEntity.ok(new JwtResponse(accessToken, refreshTokenEntity.getToken()));
     }
 
     @PostMapping("/login")
@@ -75,12 +84,12 @@ public class AuthController {
 
             String accessToken = jwtUtils.generateAccessToken(userDetails);
 
-            // ONE AND ONLY CALL – THIS IS THE CORRECT ONE
+            // ONE AND ONLY CALL â€“ THIS IS THE CORRECT ONE
             RefreshToken refreshTokenEntity = refreshTokenService.createRefreshToken(email);
 
             return ResponseEntity.ok(new JwtResponse(
                     accessToken,
-                    refreshTokenEntity.getToken()   // ← now it's NOT null
+                    refreshTokenEntity.getToken()   // â† now it's NOT null
             ));
 
         } catch (BadCredentialsException e) {

@@ -27,7 +27,11 @@ public class Order {
     private String stripePaymentIntentId;
 
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private OrderStatus status = OrderStatus.PENDING;
+
+    @Builder.Default
+    private boolean stockReserved = false;
 
     private BigDecimal totalAmount;
     @CreationTimestamp

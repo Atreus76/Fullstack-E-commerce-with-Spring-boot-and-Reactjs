@@ -1,15 +1,13 @@
 package com.example.ecommerce_backend.DTO;
 
-
 public class JwtResponse {
-    private static String accessToken;
-    private static String refreshToken;
+    private String accessToken;
+    private String refreshToken;
 
     public JwtResponse(String accessToken, String refreshToken) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
     }
-
 
     public String getAccessToken() {
         return accessToken;

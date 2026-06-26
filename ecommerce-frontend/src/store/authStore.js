@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import api from '../api/client';
 import toast from 'react-hot-toast';
-import {jwtDecode} from 'jwt-decode'; // ← We'll install this in a second
+import {jwtDecode} from 'jwt-decode'; // â† We'll install this in a second
 import useCartStore from './cartStore';
 
 const useAuthStore = create((set) => ({
@@ -62,19 +62,27 @@ const useAuthStore = create((set) => ({
     }
   },
 
-  // Register → auto login
+  // Register â†’ auto login
   register: async (name, email, password) => {
     try {
       const res = await api.post('/auth/register', { name, email, password });
       const { accessToken, refreshToken } = res.data;
+      if (!accessToken || !refreshToken) {
+        throw new Error('Registration response did not include tokens');
+      }
 
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
 
       // Decode user from token
-      useAuthStore.getState().setUserFromToken(accessToken);
+      const user = useAuthStore.getState().setUserFromToken(accessToken);
+      if (!user) {
+        throw new Error('Failed to decode user from token');
+      }
 
+      set({ accessToken });
       toast.success('Account created! Welcome!');
+      return user;
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed');
       throw err;

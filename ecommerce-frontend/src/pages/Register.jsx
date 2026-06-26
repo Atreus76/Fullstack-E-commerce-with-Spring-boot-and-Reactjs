@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
+import useCartStore from '../store/cartStore';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -17,7 +18,7 @@ export default function Register() {
       await register(name, email, password);
       await useCartStore.getState().fetchCart();
       navigate('/');
-    } catch (err) {
+    } catch {
       // toast already shown
     } finally {
       setLoading(false);
