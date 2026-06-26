@@ -100,7 +100,7 @@ public class CartService {
                         item.getProduct().getId(),
                         item.getProduct().getName(),
                         item.getProduct().getSlug(),
-                        item.getProduct().getImages().get(0),
+                        firstImage(item.getProduct()),
                         item.getProduct().getPrice(),
                         item.getQuantity()
                 ))
@@ -118,5 +118,10 @@ public class CartService {
         if (requestedQuantity > availableStock) {
             throw new RuntimeException("Insufficient stock for " + product.getName());
         }
+    }
+    private String firstImage(Product product) {
+        return product.getImages() != null && !product.getImages().isEmpty()
+                ? product.getImages().get(0)
+                : null;
     }
 }

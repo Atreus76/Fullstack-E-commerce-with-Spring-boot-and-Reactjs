@@ -10,11 +10,12 @@ import com.example.ecommerce_backend.repository.ProductRepository;
 import com.github.slugify.Slugify;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.query.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.awt.print.Pageable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -22,6 +23,9 @@ import java.util.Locale;
 @RequiredArgsConstructor
 @Transactional
 public class ProductService {
+    private static final int MAX_PRODUCT_IMAGES = 5;
+    private static final String PRODUCT_IMAGE_FOLDER = "ecommerce/products";
+
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ImageUploadService imageUploadService;
@@ -29,18 +33,13 @@ public class ProductService {
             .locale(Locale.ENGLISH)
             .lowerCase(true)
             .build();
+
     public Product create(CreateProductRequest req) throws IOException {
         Category category = categoryRepository.findById(req.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
         String slug = generateUniqueSlug(req.getName());
-
-        List<String> imageUrls = req.getImages().stream()
-                .map(file -> {
-                    try { return imageUploadService.upload(file); }
-                    catch (IOException e) { throw new RuntimeException(e); }
-                })
-                .toList();
+        List<String> imageUrls = uploadProductImages(req.getImages());
 
         Product product = Product.builder()
                 .name(req.getName())
@@ -73,12 +72,14 @@ public class ProductService {
             product.setCategory(cat);
         }
 
-        // Add new images if provided
-        if (req.getNewImages() != null && !req.getNewImages().isEmpty()) {
-            List<String> newUrls = req.getNewImages().stream()
-                    .map(f -> { try { return imageUploadService.upload(f); } catch (IOException e) { throw new RuntimeException(e); } })
-                    .toList();
-            product.getImages().addAll(newUrls);
+        List<MultipartFile> newImages = nonEmptyFiles(req.getNewImages());
+        if (!newImages.isEmpty()) {
+            List<String> currentImages = mutableImages(product.getImages());
+            if (currentImages.size() + newImages.size() > MAX_PRODUCT_IMAGES) {
+                throw new IllegalArgumentException("A product can have at most " + MAX_PRODUCT_IMAGES + " images");
+            }
+            currentImages.addAll(uploadProductImages(newImages));
+            product.setImages(currentImages);
         }
 
         return productRepository.save(product);
@@ -86,7 +87,7 @@ public class ProductService {
 
     public void delete(Long id) throws IOException {
         Product p = productRepository.findById(id).orElseThrow();
-        for (String url : p.getImages()) {
+        for (String url : safeImages(p.getImages())) {
             imageUploadService.deleteByUrl(url);
         }
         productRepository.delete(p);
@@ -122,9 +123,38 @@ public class ProductService {
         return new ProductResponse(
                 p.getId(), p.getName(), p.getSlug(), p.getShortDescription(),
                 p.getDescription(), p.getPrice(), p.getStock(), p.isActive(),
-                p.getImages(),
+                safeImages(p.getImages()),
                 p.getCategory().getId(),
                 p.getCategory().getName()
         );
+    }
+
+    private List<String> uploadProductImages(List<MultipartFile> images) throws IOException {
+        List<MultipartFile> files = nonEmptyFiles(images);
+        if (files.size() > MAX_PRODUCT_IMAGES) {
+            throw new IllegalArgumentException("A product can have at most " + MAX_PRODUCT_IMAGES + " images");
+        }
+
+        List<String> imageUrls = new ArrayList<>();
+        for (MultipartFile file : files) {
+            String uploadedUrl = imageUploadService.upload(file, PRODUCT_IMAGE_FOLDER);
+            if (uploadedUrl != null) imageUrls.add(uploadedUrl);
+        }
+        return imageUrls;
+    }
+
+    private List<MultipartFile> nonEmptyFiles(List<MultipartFile> files) {
+        if (files == null) return Collections.emptyList();
+        return files.stream()
+                .filter(file -> file != null && !file.isEmpty())
+                .toList();
+    }
+
+    private List<String> safeImages(List<String> images) {
+        return images == null ? Collections.emptyList() : images;
+    }
+
+    private List<String> mutableImages(List<String> images) {
+        return images == null ? new ArrayList<>() : new ArrayList<>(images);
     }
 }

@@ -1,6 +1,7 @@
 // src/pages/admin/CategoryModal.jsx
 import { useState } from 'react';
 import api from '../api/client';
+import toast from 'react-hot-toast';
 
 export default function CategoryModal({ category, onClose, onSuccess }) {
   const [name, setName] = useState(category?.name || '');

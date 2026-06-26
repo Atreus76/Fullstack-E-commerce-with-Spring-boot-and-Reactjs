@@ -1,14 +1,17 @@
 // src/pages/admin/ProductModal.jsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../api/client';
+
+const MAX_PRODUCT_IMAGES = 5;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 export default function ProductModal({ product, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     name: product?.name || '',
     price: product?.price || '',
     stock: product?.stock || '',
-    categoryId: product?.category?.id || '',
+    categoryId: product?.categoryId || product?.category?.id || '',
     description: product?.description || '',
     active: product?.active ?? true,
   });
@@ -21,30 +24,51 @@ export default function ProductModal({ product, onClose, onSuccess }) {
     queryFn: () => api.get('/categories').then(res => res.data),
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleImageChange = (e) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    const totalImages = existingImages.length + selectedFiles.length;
 
-    const data = new FormData();
+    if (totalImages > MAX_PRODUCT_IMAGES) {
+      alert(`A product can have at most ${MAX_PRODUCT_IMAGES} images.`);
+      e.target.value = '';
+      setImages([]);
+      return;
+    }
+
+    const oversizedFile = selectedFiles.find((file) => file.size > MAX_IMAGE_BYTES);
+    if (oversizedFile) {
+      alert('Each image must be 5MB or smaller.');
+      e.target.value = '';
+      setImages([]);
+      return;
+    }
+
+    setImages(selectedFiles);
+  };
+
+  const appendProductFields = (data) => {
     data.append('name', formData.name);
     data.append('price', formData.price);
     data.append('stock', formData.stock);
     data.append('categoryId', formData.categoryId);
     data.append('description', formData.description);
     data.append('active', formData.active);
+  };
 
-    images.forEach((file) => {
-      data.append('images', file);
-    });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const data = new FormData();
+    appendProductFields(data);
 
     try {
       if (product) {
-        // Edit – PUT with new images
-        data.append('newImages', images);
+        images.forEach((file) => data.append('newImages', file));
         await api.put(`/admin/products/${product.id}`, data, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       } else {
-        // Add – POST
+        images.forEach((file) => data.append('images', file));
         await api.post('/admin/products', data, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
@@ -53,7 +77,7 @@ export default function ProductModal({ product, onClose, onSuccess }) {
       onClose();
     } catch (err) {
       console.error(err);
-      alert('Failed to save product');
+      alert(err.response?.data?.error || 'Failed to save product');
     }
   };
 
@@ -135,9 +159,12 @@ export default function ProductModal({ product, onClose, onSuccess }) {
               type="file"
               multiple
               accept="image/*"
-              onChange={(e) => setImages(Array.from(e.target.files))}
+              onChange={handleImageChange}
               className="w-full"
             />
+            <p className="mt-2 text-sm text-gray-500">
+              Up to {MAX_PRODUCT_IMAGES} images, 5MB each.
+            </p>
             {existingImages.length > 0 && (
               <div className="grid grid-cols-4 gap-4 mt-4">
                 {existingImages.map((img, i) => (

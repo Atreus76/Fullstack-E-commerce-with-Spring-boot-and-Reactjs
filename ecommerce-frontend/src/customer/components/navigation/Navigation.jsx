@@ -1,15 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import useAuthStore from '../../../store/authStore';
-import  useCartStore  from '../../../store/cartStore';
+import useCartStore from '../../../store/cartStore';
 
 import {
   AppBar,
   Toolbar,
   IconButton,
   Badge,
-  Menu,
-  MenuItem,
   InputBase,
   Box,
   Typography,
@@ -22,7 +20,6 @@ import {
 
 import {
   ShoppingCart,
-  AccountCircle,
   Menu as MenuIcon,
   Search as SearchIcon,
   FavoriteBorder,
@@ -30,16 +27,15 @@ import {
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuthStore();
-  const { items, getTotalItems } = useCartStore();   // cartItems là array
+  const { user, logout } = useAuthStore();
+  const getTotalItems = useCartStore((state) => state.getTotalItems);
   const [searchParams] = useSearchParams();
   const debounceTimeout = useRef(null);
 
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
-  const [userAnchorEl, setUserAnchorEl] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const cartCount = getTotalItems ? getTotalItems() : cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  const cartCount = getTotalItems();
   // Debounce search realtime
   useEffect(() => {
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
@@ -62,12 +58,8 @@ const Navbar = () => {
     }
   };
 
-  const handleUserMenuOpen = (event) => setUserAnchorEl(event.currentTarget);
-  const handleUserMenuClose = () => setUserAnchorEl(null);
-
   const handleLogout = () => {
     logout();
-    handleUserMenuClose();
     navigate('/login');
   };
 
@@ -182,7 +174,7 @@ const Navbar = () => {
 
                       {/* Logout */}
                       <button
-                        onClick={logout}
+                        onClick={handleLogout}
                         className="text-sm font-medium text-gray-700 hover:text-red-600"
                       >
                         Logout
@@ -247,7 +239,7 @@ const Navbar = () => {
                 <ListItemText primary={item.text} />
               </ListItem>
             ))}
-            {!isAuthenticated && (
+            {!user && (
               <ListItem button component={Link} to="/login" onClick={() => setMobileOpen(false)}>
                 <ListItemText primary="Đăng nhập" />
               </ListItem>

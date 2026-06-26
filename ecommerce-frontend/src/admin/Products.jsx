@@ -1,7 +1,6 @@
 // src/pages/admin/Products.jsx
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import ProductModal from './ProductModal';
@@ -57,7 +56,7 @@ export default function AdminProducts() {
               <tr key={product.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4">
                   <img
-                    src={product.images[0] || '/placeholder.jpg'}
+                    src={product.images?.[0] || '/placeholder.jpg'}
                     alt={product.name}
                     className="w-16 h-16 object-cover rounded"
                   />
@@ -65,7 +64,7 @@ export default function AdminProducts() {
                 <td className="px-6 py-4 font-medium">{product.name}</td>
                 <td className="px-6 py-4">${product.price}</td>
                 <td className="px-6 py-4">{product.stock}</td>
-                <td className="px-6 py-4">{product.category?.name || '—'}</td>
+                <td className="px-6 py-4">{product.categoryName || '-'}</td>
                 <td className="px-6 py-4">
                   <span className={`px-3 py-1 rounded-full text-sm ${
                     product.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'

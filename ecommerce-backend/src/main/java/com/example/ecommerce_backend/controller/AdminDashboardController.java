@@ -62,7 +62,7 @@ public class AdminDashboardController {
                 .map(e -> new TopProduct(
                         e.getKey().getId(),
                         e.getKey().getName(),
-                        e.getKey().getImages().get(0),
+                        firstImage(e.getKey()),
                         e.getValue()
                 ))
                 .toList();
@@ -89,5 +89,10 @@ public class AdminDashboardController {
                 topProducts,
                 recentOrders
         );
+    }
+    private String firstImage(Product product) {
+        return product.getImages() != null && !product.getImages().isEmpty()
+                ? product.getImages().get(0)
+                : null;
     }
 }

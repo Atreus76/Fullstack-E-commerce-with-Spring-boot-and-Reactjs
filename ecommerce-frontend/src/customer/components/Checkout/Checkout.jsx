@@ -11,7 +11,7 @@ import { loadStripe } from '@stripe/stripe-js';
 const stripePromise = loadStripe('pk_test_51SaFPmLoy0wqybSZQrz6DoMQPhT8ptcnDtnYZOZqr0A96rHuT6NR8cmM2nqMKNAjdgJlk0n330yvSagaMML6TYzV00vUwtsGkA')
 export default function Checkout() {
   const navigate = useNavigate();
-  const { items, totalPrice, clearCart } = useCartStore();
+  const { items } = useCartStore();
 
   const [clientSecret, setClientSecret] = useState('');
   const [loading, setLoading] = useState(true);
@@ -29,9 +29,9 @@ export default function Checkout() {
         setClientSecret(res.data.clientSecret);
         setLoading(false);
       })
-      .catch(err => {
+      .catch(() => {
         toast.error('Failed to resume payment');
-        navigate('/orders'); // back to orders list
+        navigate('/account/order');
       });
     return;
   }
@@ -47,7 +47,7 @@ export default function Checkout() {
       setClientSecret(res.data.clientSecret);
       setLoading(false);
     })
-    .catch(err => {
+    .catch(() => {
       toast.error('Failed to initialize payment');
       navigate('/cart');
     });
@@ -92,7 +92,7 @@ export default function Checkout() {
           )}
 
           <p className="text-sm text-gray-500 mt-8 text-center">
-            Test card: 4242 4242 4242 4242 • Any future date • Any CVC
+            Test card: 4242 4242 4242 4242 â€¢ Any future date â€¢ Any CVC
           </p>
           </div>
         </div>
