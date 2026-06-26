@@ -1,8 +1,7 @@
-// src/store/authStore.js
 import { create } from 'zustand';
 import api from '../api/client';
 import toast from 'react-hot-toast';
-import {jwtDecode} from 'jwt-decode'; // Ã¢â€ Â We'll install this in a second
+import { jwtDecode } from 'jwt-decode';
 import useCartStore from './cartStore';
 import useWishlistStore from './wishlistStore';
 
@@ -10,19 +9,17 @@ const useAuthStore = create((set) => ({
   user: null,
   accessToken: localStorage.getItem('accessToken'),
   isAdmin: localStorage.getItem('role') === 'ADMIN',
+  initialized: false,
 
-  // Helper to decode user info from JWT
   setUserFromToken: (accessToken) => {
     try {
       const decoded = jwtDecode(accessToken);
-      // Standard Spring Boot JWT fields
-      const email = decoded.sub; // "sub" = subject = email/username
-      const roles = decoded.roles || decoded.authorities || []; // could be "roles" or "authorities"
+      const email = decoded.sub;
+      const roles = decoded.roles || decoded.authorities || [];
 
-      // Extract role string
       let role = 'USER';
       if (Array.isArray(roles)) {
-        const roleObj = roles.find(r => r.authority);
+        const roleObj = roles.find((item) => item.authority);
         role = roleObj ? roleObj.authority.replace('ROLE_', '') : 'USER';
       } else if (typeof roles === 'string') {
         role = roles.replace('ROLE_', '');
@@ -30,9 +27,7 @@ const useAuthStore = create((set) => ({
 
       const user = { email, role };
       localStorage.setItem('role', role === 'ADMIN' ? 'ADMIN' : 'USER');
-      console.log('Decoded user from token:', user);
-
-      set({ user, isAdmin: role === 'ADMIN' });
+      set({ user, isAdmin: role === 'ADMIN', initialized: true });
       return user;
     } catch (err) {
       console.error('Failed to decode token', err);
@@ -40,7 +35,6 @@ const useAuthStore = create((set) => ({
     }
   },
 
-  // Login
   login: async (email, password) => {
     try {
       const res = await api.post('/auth/login', { email, password });
@@ -49,23 +43,21 @@ const useAuthStore = create((set) => ({
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
 
-      // Decode user from token
       const user = useAuthStore.getState().setUserFromToken(accessToken);
-      if (user){
-        set({ accessToken });
-        await useWishlistStore.getState().fetchWishlistIds();
-        toast.success('Welcome back!');
-        return user;
-      }else {
+      if (!user) {
         throw new Error('Failed to decode user from token');
       }
+
+      set({ accessToken, initialized: true });
+      await useWishlistStore.getState().fetchWishlistIds();
+      toast.success('Welcome back!');
+      return user;
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed');
       throw err;
     }
   },
 
-  // Register Ã¢â€ â€™ auto login
   register: async (name, email, password) => {
     try {
       const res = await api.post('/auth/register', { name, email, password });
@@ -77,13 +69,12 @@ const useAuthStore = create((set) => ({
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
 
-      // Decode user from token
       const user = useAuthStore.getState().setUserFromToken(accessToken);
       if (!user) {
         throw new Error('Failed to decode user from token');
       }
 
-      set({ accessToken });
+      set({ accessToken, initialized: true });
       await useWishlistStore.getState().fetchWishlistIds();
       toast.success('Account created! Welcome!');
       return user;
@@ -93,7 +84,6 @@ const useAuthStore = create((set) => ({
     }
   },
 
-  // Logout
   logout: async () => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
@@ -105,19 +95,31 @@ const useAuthStore = create((set) => ({
     } finally {
       localStorage.clear();
       useWishlistStore.getState().clearWishlist();
-      set({ user: null, accessToken: null, isAdmin: false });
+      set({ user: null, accessToken: null, isAdmin: false, initialized: true });
       toast.success('Logged out');
       window.location.href = '/login';
     }
   },
 
-  // Optional: Load user on app start (if token exists)
   init: async () => {
     const token = localStorage.getItem('accessToken');
-    if (token) {
-      useAuthStore.getState().setUserFromToken(token);
+    if (!token) {
+      set({ initialized: true });
+      return;
+    }
+
+    const user = useAuthStore.getState().setUserFromToken(token);
+    if (!user) {
+      localStorage.clear();
+      set({ user: null, accessToken: null, isAdmin: false, initialized: true });
+      return;
+    }
+
+    try {
       await useCartStore.getState().fetchCart();
       await useWishlistStore.getState().fetchWishlistIds();
+    } finally {
+      set({ initialized: true });
     }
   },
 }));

@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { storage } from '../lib/storage';
+import { API_BASE_URL } from '../config/env';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: API_BASE_URL,
 });
 
 // Add token to every request
@@ -49,10 +50,9 @@ api.interceptors.response.use(
         const refreshToken = storage.getRefreshToken();
         if (!refreshToken) throw new Error('No refresh token');
 
-        const res = await axios.post('http://localhost:8080/api/auth/refresh-token', {
+        const res = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
           refreshToken,
         });
-        console.log('Login response:', res.data);
 
         const { accessToken } = res.data;
         storage.setToken(accessToken);

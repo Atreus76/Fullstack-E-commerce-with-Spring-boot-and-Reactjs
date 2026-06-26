@@ -33,6 +33,17 @@ public class Order {
     @Builder.Default
     private boolean stockReserved = false;
 
+    private String shippingFirstName;
+    private String shippingLastName;
+
+    @Column(length = 500)
+    private String shippingAddress;
+
+    private String shippingCity;
+    private String shippingState;
+    private String shippingZip;
+    private String shippingPhoneNumber;
+
     private BigDecimal totalAmount;
     @CreationTimestamp
     @Column(name="created_at", updatable = false)

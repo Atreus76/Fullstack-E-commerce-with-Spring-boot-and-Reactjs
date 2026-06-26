@@ -1,5 +1,6 @@
 package com.example.ecommerce_backend.service;
 
+import com.example.ecommerce_backend.DTO.ShippingAddressRequest;
 import com.example.ecommerce_backend.model.*;
 import com.example.ecommerce_backend.repository.OrderRepository;
 import com.example.ecommerce_backend.repository.ProductRepository;
@@ -47,11 +48,11 @@ public class OrderService {
         }
     }
 
-    public String createPaymentIntent(String email) throws StripeException {
-        return createOrderFromCart(email).getClientSecret();
+    public String createPaymentIntent(String email, ShippingAddressRequest shippingAddress) throws StripeException {
+        return createOrderFromCart(email, shippingAddress).getClientSecret();
     }
 
-    public OrderCheckoutResult createOrderFromCart(String email) throws StripeException {
+    public OrderCheckoutResult createOrderFromCart(String email, ShippingAddressRequest shippingAddress) throws StripeException {
         orderRepository.findFirstByUserEmailAndStatusOrderByCreatedAtDesc(email, OrderStatus.PENDING)
                 .ifPresent(order -> {
                     throw new IllegalArgumentException(
@@ -63,7 +64,7 @@ public class OrderService {
         if (cart.getItems().isEmpty()) throw new RuntimeException("Cart is empty");
 
         BigDecimal total = calculateCartTotal(cart);
-        Order order = buildPendingOrderFromCart(cart, total);
+        Order order = buildPendingOrderFromCart(cart, total, shippingAddress);
         reserveStockForOrder(order);
 
         try {
@@ -154,13 +155,15 @@ public class OrderService {
                 .orElse(null);
     }
 
-    private Order buildPendingOrderFromCart(Cart cart, BigDecimal total) {
+    private Order buildPendingOrderFromCart(Cart cart, BigDecimal total, ShippingAddressRequest shippingAddress) {
         Order order = Order.builder()
                 .user(cart.getUser())
                 .createdAt(LocalDateTime.now())
                 .totalAmount(total)
                 .status(OrderStatus.PENDING)
                 .build();
+
+        applyShippingAddress(order, shippingAddress);
 
         cart.getItems().forEach(cartItem -> {
             Product product = cartItem.getProduct();
@@ -177,6 +180,24 @@ public class OrderService {
         return order;
     }
 
+
+    private void applyShippingAddress(Order order, ShippingAddressRequest shippingAddress) {
+        if (shippingAddress == null) {
+            throw new IllegalArgumentException("Shipping address is required");
+        }
+
+        order.setShippingFirstName(clean(shippingAddress.getFirstName()));
+        order.setShippingLastName(clean(shippingAddress.getLastName()));
+        order.setShippingAddress(clean(shippingAddress.getAddress()));
+        order.setShippingCity(clean(shippingAddress.getCity()));
+        order.setShippingState(clean(shippingAddress.getState()));
+        order.setShippingZip(clean(shippingAddress.getZip()));
+        order.setShippingPhoneNumber(clean(shippingAddress.getPhoneNumber()));
+    }
+
+    private String clean(String value) {
+        return value == null ? null : value.trim();
+    }
     private BigDecimal calculateCartTotal(Cart cart) {
         return cart.getItems().stream()
                 .map(item -> item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))

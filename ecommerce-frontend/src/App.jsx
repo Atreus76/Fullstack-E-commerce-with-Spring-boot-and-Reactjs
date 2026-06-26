@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './store/authStore';
 import CustomerRouters from './Routers/CustomerRouters';
+import ProtectedRoute from './Routers/ProtectedRoute';
 import AdminLayout from './layout/AdminLayout';
 import AdminDashboard from './admin/Dashboard';
 import AdminProducts from './admin/Products';
@@ -25,11 +26,14 @@ function App() {
       />
       <Routes>
         <Route path="/*" element={<CustomerRouters />} />
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/products" element={<AdminProducts />} />
-          <Route path="/admin/categories" element={<AdminCategories />} />
-          <Route path="/admin/orders" element={<AdminOrders />} />
+        <Route element={<ProtectedRoute requireAdmin />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/products" element={<AdminProducts />} />
+            <Route path="/admin/categories" element={<AdminCategories />} />
+            <Route path="/admin/orders" element={<AdminOrders />} />
+          </Route>
         </Route>
       </Routes>
     </>

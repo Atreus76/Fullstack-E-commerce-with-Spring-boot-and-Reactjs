@@ -1,6 +1,5 @@
 package com.example.ecommerce_backend.DTO;
 
-import com.example.ecommerce_backend.status.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,5 +20,6 @@ public class OrderResponse {
     private LocalDateTime createdAt = LocalDateTime.now();
     private List<OrderItemResponse> items = new ArrayList<>();
     private String clientSecret;
+    private ShippingAddressResponse shippingAddress;
 
 }

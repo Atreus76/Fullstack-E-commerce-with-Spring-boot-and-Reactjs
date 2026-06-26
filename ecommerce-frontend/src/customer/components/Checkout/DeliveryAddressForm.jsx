@@ -1,143 +1,82 @@
-import React from 'react'
-import { Button, Grid, Box, TextField } from '@mui/material'
-import AddressCard from '../AddressCard/AddressCard'
+import { useState } from 'react';
 
-const DeliveryAddressForm = () => {
-    const handleSubmit = (e) => {
-        e.preventDefault()
-        const data = new FormData(e.currentTarget)
-        const address = {
-            firstName: data.get('firstName'),
-            lastName: data.get('lastName'),
-            address: data.get('address'),
-            city: data.get('city'),
-            state: data.get('state'),
-            zip: data.get('zip'),
-            phoneNumber: data.get('phoneNumber'),
-        }
-        console.log("address", data)
-    }
+const emptyAddress = {
+  firstName: '',
+  lastName: '',
+  address: '',
+  city: '',
+  state: '',
+  zip: '',
+  phoneNumber: '',
+};
+
+const fields = [
+  { name: 'firstName', label: 'First name', autoComplete: 'given-name' },
+  { name: 'lastName', label: 'Last name', autoComplete: 'family-name' },
+  { name: 'address', label: 'Street address', autoComplete: 'shipping street-address', full: true, multiline: true },
+  { name: 'city', label: 'City', autoComplete: 'shipping address-level2' },
+  { name: 'state', label: 'State / Province', autoComplete: 'shipping address-level1' },
+  { name: 'zip', label: 'ZIP / Postal code', autoComplete: 'shipping postal-code' },
+  { name: 'phoneNumber', label: 'Phone number', autoComplete: 'tel' },
+];
+
+const DeliveryAddressForm = ({ onSubmit, submitting = false }) => {
+  const [address, setAddress] = useState(emptyAddress);
+
+  const updateField = (name, value) => {
+    setAddress((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    onSubmit?.(address);
+  };
+
   return (
-    <div>
-        <Grid container spacing={4}>
-            <Grid size={{xs:12, lg: 5}} className="border rounded-e-md shadow-md h-[30rem] overflow y-scroll">
-                <div className='p-5 py-7 border-b cursor-pointer'>
-                    <AddressCard />
-                    <Button sx={{mt:2, bgcolor:"RGB(145 85 253)"}}
-                        size='large'
-                        variant='contained'
-                    >
-                        Delivery Here
-                    </Button>
-                </div>
-            </Grid>
-            <Grid item size={{xs:12, lg:7}}>
-                <Box className="border rounded-s-md shadow-md p-5">
-                    <form onSubmit={handleSubmit} action="
-                    ">
-                        <Grid container spacing={3}>
-                            <Grid item size={{xs:12, sm: 6}}>
-                                <TextField
-                                required
-                                id='firstName'
-                                name='firstName'
-                                label='First Name'
-                                fullWidth
-                                autoComplete='given-name'
-                                >
+    <form onSubmit={handleSubmit} className="space-y-5 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900">Delivery address</h2>
+        <p className="mt-1 text-sm text-gray-500">This address will be saved on the order.</p>
+      </div>
 
-                                </TextField>
-                            </Grid>
-                            <Grid item size={{xs:12, sm: 6}}>
-                                <TextField
-                                required
-                                id='lastName'
-                                name='lastName'
-                                label='Last Name'
-                                fullWidth
-                                autoComplete='given-name'
-                                >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {fields.map((field) => (
+          <label key={field.name} className={field.full ? 'sm:col-span-2' : ''}>
+            <span className="mb-1 block text-sm font-medium text-gray-700">{field.label}</span>
+            {field.multiline ? (
+              <textarea
+                required
+                rows={3}
+                name={field.name}
+                autoComplete={field.autoComplete}
+                value={address[field.name]}
+                onChange={(event) => updateField(field.name, event.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+              />
+            ) : (
+              <input
+                required
+                type="text"
+                name={field.name}
+                autoComplete={field.autoComplete}
+                value={address[field.name]}
+                onChange={(event) => updateField(field.name, event.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+              />
+            )}
+          </label>
+        ))}
+      </div>
 
-                                </TextField>
-                            </Grid>
-                            <Grid item size={{xs:12}}>
-                                <TextField
-                                required
-                                id='address'
-                                name='address'
-                                label='Address'
-                                fullWidth
-                                autoComplete='given-name'
-                                multiline
-                                rows={4}
-                                >
+      <button
+        type="submit"
+        disabled={submitting}
+        className="w-full rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {submitting ? 'Saving address...' : 'Continue to payment'}
+      </button>
+    </form>
+  );
+};
 
-                                </TextField>
-                            </Grid>
-                            <Grid item size={{xs:12, sm: 6}}>
-                                <TextField
-                                required
-                                id='city'
-                                name='city'
-                                label='City'
-                                fullWidth
-                                autoComplete='given-name'
-                                >
-
-                                </TextField>
-                            </Grid>
-                            <Grid item size={{xs:12, sm: 6}}>
-                                <TextField
-                                required
-                                id='state'
-                                name='state'
-                                label='State/Province/Region'
-                                fullWidth
-                                autoComplete='given-name'
-                                >
-
-                                </TextField>
-                            </Grid>
-                            <Grid item size={{xs:12, sm: 6}}>
-                                <TextField
-                                required
-                                id='zip'
-                                name='zip'
-                                label='Zip/Postal Code'
-                                fullWidth
-                                autoComplete='shipping postal-code'
-                                >
-
-                                </TextField>
-                            </Grid>
-                            <Grid item size={{xs:12, sm: 6}}>
-                                <TextField
-                                required
-                                id='phoneNumber'
-                                name='phoneNumber'
-                                label='Phone Number'
-                                fullWidth
-                                autoComplete='given-name'
-                                >
-
-                                </TextField>
-                            </Grid>
-                             <Grid py={1.5} item size={{xs:12, sm: 6}}>
-                                <Button sx={{mt:2, bgcolor:"RGB(145 85 253)"}}
-                        size='large'
-                        variant='contained'
-                        type='submit'
-                    >
-                        Delivery Here
-                    </Button>
-                            </Grid>
-                        </Grid>
-                    </form>
-                </Box>
-            </Grid>
-        </Grid>
-    </div>
-  )
-}
-
-export default DeliveryAddressForm
+export default DeliveryAddressForm;

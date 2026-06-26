@@ -59,7 +59,21 @@ export default function AdminOrders() {
           <tbody className="divide-y divide-gray-200">
             {orders.map((order) => (
               <tr key={order.id} className="align-top hover:bg-gray-50">
-                <td className="px-6 py-4 font-medium">#{order.id}</td>
+                <td className="px-6 py-4">
+                  <p className="font-medium">#{order.id}</p>
+                  {order.shippingAddress && (
+                    <div className="mt-2 max-w-xs text-sm text-gray-600">
+                      <p className="font-medium text-gray-700">
+                        {order.shippingAddress.firstName} {order.shippingAddress.lastName}
+                      </p>
+                      <p>{order.shippingAddress.address}</p>
+                      <p>
+                        {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zip}
+                      </p>
+                      <p>{order.shippingAddress.phoneNumber}</p>
+                    </div>
+                  )}
+                </td>
                 <td className="px-6 py-4 text-sm text-gray-600">
                   {new Date(order.createdAt).toLocaleString()}
                 </td>
