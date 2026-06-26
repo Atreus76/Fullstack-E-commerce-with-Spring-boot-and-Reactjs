@@ -16,6 +16,7 @@ import MainLayout from '../layout/MainLayout'
 import AuthLayout from '../layout/AuthLayout'
 import CheckoutSuccess from '../customer/components/Checkout/CheckoutSuccess'
 import Shop from '../customer/pages/Shop'
+import Wishlist from '../customer/pages/Wishlist'
 
 const CustomerRouters = () => {
   return (
@@ -33,6 +34,7 @@ const CustomerRouters = () => {
           <Route path='/account/order' element={<Order />} />
           <Route path='/account/order/:orderId' element={<OrderDetails />} />
           <Route path='/shop' element={<Shop />} />
+          <Route path='/wishlist' element={<Wishlist />} />
         </Route>
 
         {/* Auth pages WITHOUT Navigation */}

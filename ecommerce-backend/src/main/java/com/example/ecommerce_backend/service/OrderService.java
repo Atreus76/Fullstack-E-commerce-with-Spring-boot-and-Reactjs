@@ -29,7 +29,36 @@ public class OrderService {
     @Value("${stripe.secret-key}")
     private String stripeKey;
 
+    public static class OrderCheckoutResult {
+        private final Order order;
+        private final String clientSecret;
+
+        public OrderCheckoutResult(Order order, String clientSecret) {
+            this.order = order;
+            this.clientSecret = clientSecret;
+        }
+
+        public Order getOrder() {
+            return order;
+        }
+
+        public String getClientSecret() {
+            return clientSecret;
+        }
+    }
+
     public String createPaymentIntent(String email) throws StripeException {
+        return createOrderFromCart(email).getClientSecret();
+    }
+
+    public OrderCheckoutResult createOrderFromCart(String email) throws StripeException {
+        orderRepository.findFirstByUserEmailAndStatusOrderByCreatedAtDesc(email, OrderStatus.PENDING)
+                .ifPresent(order -> {
+                    throw new IllegalArgumentException(
+                            "You already have a pending order. Complete or cancel it before creating a new one."
+                    );
+                });
+
         Cart cart = cartService.getCartForUser(email);
         if (cart.getItems().isEmpty()) throw new RuntimeException("Cart is empty");
 
@@ -37,24 +66,32 @@ public class OrderService {
         Order order = buildPendingOrderFromCart(cart, total);
         reserveStockForOrder(order);
 
-        Stripe.apiKey = stripeKey;
-        PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                .setAmount(total.multiply(BigDecimal.valueOf(100)).longValue())
-                .setCurrency("usd")
-                .putMetadata("userEmail", email)
-                .setAutomaticPaymentMethods(
-                        PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
-                                .setEnabled(true)
-                                .build()
-                )
-                .build();
+        try {
+            Stripe.apiKey = stripeKey;
+            PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+                    .setAmount(total.multiply(BigDecimal.valueOf(100)).longValue())
+                    .setCurrency("usd")
+                    .putMetadata("userEmail", email)
+                    .putMetadata("orderId", order.getId().toString())
+                    .setAutomaticPaymentMethods(
+                            PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
+                                    .setEnabled(true)
+                                    .build()
+                    )
+                    .build();
 
-        PaymentIntent paymentIntent = PaymentIntent.create(params);
-        order.setStripePaymentIntentId(paymentIntent.getId());
-        orderRepository.save(order);
-        cartService.clearCart(email);
+            PaymentIntent paymentIntent = PaymentIntent.create(params);
+            order.setStripePaymentIntentId(paymentIntent.getId());
+            orderRepository.save(order);
+            cartService.clearCart(email);
 
-        return paymentIntent.getClientSecret();
+            return new OrderCheckoutResult(order, paymentIntent.getClientSecret());
+        } catch (StripeException e) {
+            releaseReservedStock(order);
+            order.setStatus(OrderStatus.CANCELLED);
+            orderRepository.save(order);
+            throw e;
+        }
     }
 
     public void reserveStockForOrder(Order order) {

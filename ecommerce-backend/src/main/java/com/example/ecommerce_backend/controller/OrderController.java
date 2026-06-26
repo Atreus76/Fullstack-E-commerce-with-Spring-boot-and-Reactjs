@@ -41,15 +41,8 @@ public class OrderController {
     // 1. CREATE ORDER + PAYMENT INTENT (called before showing Stripe form)
     @PostMapping("/create-from-cart")
     public OrderResponse createOrderFromCart(Authentication auth) throws StripeException {
-        String clientSecret = orderService.createPaymentIntent(auth.getName());
-
-        Order order = orderRepository.findAllByUserEmailOrderByCreatedAtDesc(auth.getName())
-                .stream()
-                .filter(o -> o.getStatus() == OrderStatus.PENDING)
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Failed to create order"));
-
-        return toFullResponse(order, clientSecret);
+        OrderService.OrderCheckoutResult checkout = orderService.createOrderFromCart(auth.getName());
+        return toFullResponse(checkout.getOrder(), checkout.getClientSecret());
     }
 
     // 2. USER: My order history
@@ -85,6 +78,25 @@ public class OrderController {
                 .toList();
     }
 
+
+    @PutMapping("/admin/{orderId}/status")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public OrderResponse updateOrderStatus(@PathVariable Long orderId, @RequestBody java.util.Map<String, String> body) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        OrderStatus nextStatus = OrderStatus.valueOf(body.getOrDefault("status", "").toUpperCase());
+        if (nextStatus == OrderStatus.CANCELLED) {
+            throw new IllegalArgumentException("Use the cancel endpoint to cancel and restore/refund an order");
+        }
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new IllegalArgumentException("Cancelled orders cannot be updated");
+        }
+
+        order.setStatus(nextStatus);
+        orderRepository.save(order);
+        return toFullResponse(order, null);
+    }
     // 4. USER: Cancel own PENDING order
     @DeleteMapping("/my/{orderId}")
     public ResponseEntity<String> cancelMyOrder(@PathVariable Long orderId, Authentication auth) throws ChangeSetPersister.NotFoundException {
@@ -113,7 +125,7 @@ public class OrderController {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ChangeSetPersister.NotFoundException());
 
-        boolean shouldRefund = order.getStatus() == OrderStatus.PAID;
+        boolean shouldRefund = order.getStripePaymentIntentId() != null && order.getStatus() != OrderStatus.PENDING;
 
         // If already paid, issue refund via Stripe
         if (shouldRefund) {
@@ -165,7 +177,7 @@ public class OrderController {
         return ResponseEntity.ok(new PaymentResponse(clientSecret));
     }
 
-    // Helper: convert Order → response DTO
+    // Helper: convert Order to response DTO
     private OrderResponse toFullResponse(Order order, String clientSecret) {
         List<OrderItemResponse> items = order.getItems().stream()
                 .map(oi -> new OrderItemResponse(

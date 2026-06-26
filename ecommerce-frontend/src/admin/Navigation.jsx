@@ -42,12 +42,12 @@ const Navigation = () => {
             >
               Categories
             </Link>
-            {/* <Link
+                        <Link
               to="/admin/orders"
               className="block px-6 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
             >
               Orders
-            </Link> */}
+            </Link>
           </nav>
         </aside>
         </div>

@@ -10,10 +10,13 @@ import com.example.ecommerce_backend.repository.ProductRepository;
 import com.github.slugify.Slugify;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -119,6 +122,10 @@ public class ProductService {
         return productRepository.findByNameContainingIgnoreCase(keyword);
     }
 
+    public Page<ProductResponse> searchProducts(String keyword, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
+        return productRepository.searchActiveProducts(keyword, categoryId, minPrice, maxPrice, pageable)
+                .map(this::toResponse);
+    }
     private ProductResponse toResponse(Product p) {
         return new ProductResponse(
                 p.getId(), p.getName(), p.getSlug(), p.getShortDescription(),
